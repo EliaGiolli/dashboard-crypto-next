@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NexCoin - Next Crypto Dashboard (In progress)
 
-## Getting Started
+A modern, responsive cryptocurrency dashboard built with **Next.js 15**, **TypeScript**, **TailwindCSS 4**, and **ShadCN UI components**. This project fetches data from the public **CoinGecko API** and displays it in both list and chart formats, offering users a fast and visually appealing way to monitor cryptocurrency trends.
 
-First, run the development server:
+---
+
+## Table of Contents
+
+- [Demo](#demo)
+- [Features](#features)
+- [Technologies Used](#technologies-used)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Motivation & Choices](#motivation--choices)
+- [License](#license)
+
+---
+
+## Demo
+
+> A live demo will be available soon.
+
+---
+
+## Features
+
+- Display real-time cryptocurrency data from CoinGecko API.
+- Interactive charts using **Recharts**.
+- Responsive design with **TailwindCSS**.
+- Mobile-friendly navigation using **ShadCN/Radix Popover**.
+- Dark/light theme support.
+- Modular and reusable components (`MobileMenu`, `About`, `Footer`).
+- Global state for authentication using **RTK** (or optional **Zustand** for simpler state management).
+- API fetching and caching using **TanStack React Query**.
+
+---
+
+## Technologies Used
+
+- **Next.js 15** – App Router, server/client components, optimized routing.
+- **React 19** – UI framework.
+- **TypeScript 5** – Type safety and developer experience.
+- **TailwindCSS 4** – Utility-first CSS framework.
+- **ShadCN UI** – Headless UI components built on Radix for accessibility and animations.
+- **clsx & class-variance-authority (CVA)** – Conditional styling and component variants.
+- **React Query (TanStack)** – Data fetching and caching.
+- **Zustand** – Global state for authentication.
+- **Zod** – Validation schemas.
+- **Lucide-react** – Lightweight, modern icons.
+- **Recharts** – Interactive charting.
+
+---
+
+## Project Structure
+```bash
+src/
+├─ assets/ # Images and illustrations
+├─ components/
+│ ├─ shared/ # Reusable components (MobileMenu, Footer, etc.)
+│ └─ ui/ # ShadCN UI wrappers
+├─ pages/ # Routes (Next.js)
+└─ styles/ # Tailwind and global styles
+```
+---
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/next-cryptodashboard.git
+cd next-cryptodashboard
+```
+Install dependencies:
+
+```bash
+npm install
+```
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+The app will be available at http://localhost:3000.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Usage and endpoints
+### Endpoints
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **/** – Homepage with About section and crypto charts.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **/crypto** – Crypto list with filters and details.
 
-## Learn More
+- **/users** - manages the logic of login and registering a new user
 
-To learn more about Next.js, take a look at the following resources:
+### Usage
+- Buttons and navigation menus use Next.js router for programmatic navigation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Reusable components (like MobileMenu and Footer) adapt to dark/light themes automatically.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Motivation & Choices
+- Next.js 15: Chosen for modern App Router features, server/client components, and optimized routing.
 
-## Deploy on Vercel
+- TailwindCSS + ShadCN: Utility-first styling combined with accessible, headless UI components allows fast development without compromising design or accessibility.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- React Query vs RTK Query(optional): React Query chosen for API fetching to simplify caching, refetching, and data management. RTK retained only for global authentication state.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Zustand: Considered for simpler global state management in the future if needed.
+
+- Recharts: Provides interactive, responsive charts for crypto data visualization.
+
+- Folder structure: Organized to separate shared components, UI wrappers, assets, and pages for modularity and scalability.
+
+The goal is to build a fast, responsive, and modern crypto dashboard with clean, maintainable code and reusable components.
+
+## License
+This project is licensed under the MIT License.
+
+
+
+
