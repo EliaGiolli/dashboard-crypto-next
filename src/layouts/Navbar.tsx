@@ -9,7 +9,7 @@ import Link from 'next/link';
 function Navbar() {
 
   return (
-    <header className='w-full bg-slate-800 text-white flex justify-evenly items-center text-center px-6 py-8 border-b-2 border-b-violet-500'>
+    <header className='w-full bg-slate-800 text-slate-200 flex justify-evenly items-center text-center px-6 py-8 border-b-2 border-b-violet-500'>
         <Link href="/" className='text-3xl md:text-4xl text-violet-600 ml-6'>NexCoin</Link>
         <nav className='flex justify-center w-full'>
             <ul className='hidden md:flex gap-6'>
@@ -29,7 +29,7 @@ function Navbar() {
             <LogIn 
                 size={30} 
                 aria-hidden="true" 
-                className='text-white hover:text-violet-700'
+                className='text-slate-200 hover:text-violet-700'
             />
         </div>
 

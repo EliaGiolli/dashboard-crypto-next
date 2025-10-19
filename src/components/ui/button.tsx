@@ -11,7 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-violet-500 text-white hover:bg-violet-700 focus:border-2 focus:border-violet-800 focus:outline-4 focus:outline-violet-700",
+        default: "bg-violet-500 text-slate-200 hover:bg-violet-700 focus:border-2 focus:border-violet-800 focus:outline-4 focus:outline-violet-700",
         hamburger:
           "bg-transparent text-white hover:bg-violet-300 focus:border-4 focus:border-violet-800 outline-2 outline-violet-700 border-2 border-violet-500",
         outline:

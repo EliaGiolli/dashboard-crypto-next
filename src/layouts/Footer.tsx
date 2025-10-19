@@ -4,7 +4,7 @@ import { Github, Twitter } from "lucide-react"
 export function Footer() {
   return (
     <footer
-      className="bg-slate-800 w-full max-h-[500px] p-8 text-white border-t-2 border-t-violet-500"
+      className="bg-slate-800 w-full max-h-[500px] p-8 text-slate-200 border-t-2 border-t-violet-500"
       aria-labelledby="footer-id"
     >
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
