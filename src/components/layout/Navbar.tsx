@@ -14,10 +14,10 @@ function Navbar() {
         <nav className='flex justify-center w-full'>
             <ul className='hidden md:flex gap-6'>
                 <li className='hover:bg-violet-300 hover:text-slate-800 hover:rounded-lg text-lg md:text-xl px-3 py-2 transition-colors duration-200 ease-in-out'>
-                    <Link href="/homepage" className='block w-full h-full'>Chi siamo</Link>
+                    <Link href="/" className='block w-full h-full'>Chi siamo</Link>
                 </li>
                 <li className='hover:bg-violet-300 hover:text-slate-800 hover:rounded-lg text-lg md:text-xl px-3 py-2 transition-colors duration-200 ease-in-out'>
-                    <Link href="/homepage"className='block w-full h-full'>Le nostre Crypto</Link>
+                    <Link href="/crypto"className='block w-full h-full'>Le nostre Crypto</Link>
                 </li>    
             </ul>
         </nav>
