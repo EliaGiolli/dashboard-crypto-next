@@ -1,9 +1,12 @@
-import About from "../layouts/About";
+import About from "../components/layout/About";
+import ChartView from "../components/layout/ChartView";
 
 export default function Home() {
   return (
     <main className="bg-slate-400 items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <About />
+      <ChartView />
+
     
     </main>
   );

@@ -1,12 +1,11 @@
 'use client'
 
 //Components
-import { Button } from "../components/ui/button";
-
+import { Button } from "../ui/button";
 //Internal imports
 import Image from "next/image"
 import { useRouter } from "next/navigation";
-import CryptoImg from "../assets/crypto-img.jpg";
+import CryptoImg from "../../assets/crypto-img.jpg";
 //External libs
 import { easeIn, motion } from 'motion/react';
 //Icons
