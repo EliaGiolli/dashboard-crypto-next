@@ -10,7 +10,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         
         {/* Logo / Nome App */}
-        <h2 id="footer-id" className="text-3xl md:text-4xl text-violet-600">
+        <h2 id="footer-id" className="text-3xl md:text-4xl text-violet-500">
           CryptoDashboard
         </h2>
 

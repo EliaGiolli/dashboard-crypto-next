@@ -1,16 +1,15 @@
-interface CryptoSymbol {
-    symbol: string,
-    name: string,
-    price_usd: number,
-    price_change_24h: number,
-    percent_change_24h: number,
-    market_cap_usd: number,
-    volume_24h_usd: number,
-    circulating_supply: number,
-    last_updated: Date
+import { ReactNode } from "react"
+
+export interface CryptoMarket {
+  id: string;
+  symbol: string;
+  name: string;
+  current_price: number;
+  market_cap: number;
+  total_volume: number;
+  price_change_percentage_24h: number;
 }
 
-export interface CryptoApiResponse {
-    status: string,
-    symbols: CryptoSymbol[]
+export interface QueryProviderTypes {
+    children: ReactNode
 }

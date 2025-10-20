@@ -10,7 +10,7 @@ function Navbar() {
 
   return (
     <header className='w-full bg-slate-800 text-slate-200 flex justify-evenly items-center text-center px-6 py-8 border-b-2 border-b-violet-500'>
-        <Link href="/" className='text-3xl md:text-4xl text-violet-600 ml-6'>NexCoin</Link>
+        <Link href="/" className='text-3xl md:text-4xl text-violet-500 ml-6'>NexCoin</Link>
         <nav className='flex justify-center w-full'>
             <ul className='hidden md:flex gap-6'>
                 <li className='hover:bg-violet-300 hover:text-slate-800 hover:rounded-lg text-lg md:text-xl px-3 py-2 transition-colors duration-200 ease-in-out'>

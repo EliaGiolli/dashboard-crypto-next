@@ -37,7 +37,7 @@ function About() {
 
         {/* Testo e bottone */}
         <div className="flex-1 flex flex-col gap-6">
-            <h1 id="main-title" className="text-4xl font-bold text-violet-700">
+            <h1 id="main-title" className="text-3xl md:text-4xl font-bold text-violet-500">
                 La tua finestra sul mondo delle crypto
             </h1>
             <p className="text-lg text-slate-200">
