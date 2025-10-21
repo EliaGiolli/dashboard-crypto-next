@@ -1,6 +1,6 @@
 'use client'
 
-import { MobileMenu } from '@/components/shared/MobileMenu';
+import { MobileMenu } from '../../components/shared/MobileMenu';
 //Icons
 import { LogIn } from 'lucide-react';
 //Internal imports

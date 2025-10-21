@@ -13,30 +13,32 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-//Internal imports
-import { useRouter } from "next/router"
-import { type FormSchema, formSchema } from "../../schemas/formSchema";
+// Internal imports
+import { useRouter } from "next/navigation"
+import { formSchema, type FormSchema } from "../../schemas/formSchema"
 
-//External libs
-import { useForm } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from 'motion/react';
+// External libs
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { motion } from "motion/react"
 
 export function CardForm() {
+  const router = useRouter()
 
   const {
-      register, 
-      handleSubmit, 
-      formState: { errors, isSubmitted }
-    } = useForm<FormSchema>({ resolver: zodResolver(formSchema) }
-  );
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+  })
 
-  const onSubmit = () => {
-    console.log('form submitted')
+  const onSubmit = (data: FormSchema) => {
+    console.log("Form submitted:", data)
+    router.push("/login") // temporaneo, finché non aggiungi le server actions
   }
 
-  const MotionButton = motion(Button);
-  const router = useRouter();
+  const MotionButton = motion(Button)
 
   return (
     <Card className="w-full max-w-sm">
@@ -49,71 +51,62 @@ export function CardForm() {
           <Button variant="link">Accedi</Button>
         </CardAction>
       </CardHeader>
+
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register("email", {
-                  required: "il campo è obbligatorio",
-                  minLength: { value: 3, message: "Deve contenere almeno 3 caratteri" },
-                  pattern: {
-                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                    message: "Inserisci un'email valida"
-                  }
-                })}
-                placeholder="m@example.com"
-              />
-              { errors.email && (
-                <p id="error-email" role="alert" className="bg-red-100 text-red-600 text-2xl p-2">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Hai dimenticato la tua password?
-                </a>
-              </div>
-              <Input 
-                id="password" 
-                type="password" 
-                {...register("password", {
-                    required: "il campo è obbligatorio",
-                    minLength: { value: 8, message: "il campo non può essere vuoto" },
-                    pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                      message: "Inserisci una password valida"
-                    }
-              })} />
-              { errors.password && (
-                <p id="error-password" role="alert" className="bg-red-100 text-red-600 text-2xl p-2">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p
+                id="error-email"
+                role="alert"
+                className="bg-red-100 text-red-600 text-sm p-2 rounded-md"
+              >
+                {errors.email.message}
+              </p>
+            )}
           </div>
+
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <a
+                href="#"
+                className="text-sm underline-offset-4 hover:underline"
+              >
+                Hai dimenticato la tua password?
+              </a>
+            </div>
+            <Input id="password" type="password" {...register("password")} />
+            {errors.password && (
+              <p
+                id="error-password"
+                role="alert"
+                className="bg-red-100 text-red-600 text-sm p-2 rounded-md"
+              >
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <CardFooter className="p-0">
+            <MotionButton
+              type="submit"
+              className="w-full"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Login
+            </MotionButton>
+          </CardFooter>
         </form>
       </CardContent>
-      <CardFooter className="w-full">
-        <MotionButton 
-          type="submit" 
-          onClick={() => router.push('/login')}
-          className="w-1/2"
-          whileHover={{ scale: 1 }}
-          whileFocus={{ scale: 1 }}
-          >
-          Login
-        </MotionButton>
-      </CardFooter>
     </Card>
   )
 }

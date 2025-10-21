@@ -13,3 +13,9 @@ export interface CryptoMarket {
 export interface QueryProviderTypes {
     children: ReactNode
 }
+
+export interface SidebarProps {
+  data?: CryptoMarket[];
+  error: Error | null;
+  isLoading: boolean;
+}
