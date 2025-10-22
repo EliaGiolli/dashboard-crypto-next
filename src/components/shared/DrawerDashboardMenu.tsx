@@ -37,7 +37,7 @@ export function DrawerDashboardMenu({ data, error, isLoading }:SidebarProps) {
           <ul>
             {data?.map((item) => (
                 <li key={item.id}>
-                    <Link href={`/crypto/${item.id}`}>{item.symbol}</Link>
+                    <Link href={`/crypto/${item.id}`}>{item.name}</Link>
                 </li>
             ))}
           </ul>
