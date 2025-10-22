@@ -8,6 +8,7 @@ export interface CryptoMarket {
   market_cap: number;
   total_volume: number;
   price_change_percentage_24h: number;
+  image:string
 }
 
 export interface QueryProviderTypes {

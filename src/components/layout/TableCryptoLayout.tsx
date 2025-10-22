@@ -5,9 +5,9 @@ import { useFetchCrypto } from "../../custom hooks/useFetchCrypto";
 import TableCryptoData from "../shared/TableCryptoData";
 
 
-function TableCryptoLayout() {
+function TableCryptoLayout({ limit = 10, currency = 'usd' }) {
 
-    const { data, error, isLoading } = useFetchCrypto();
+    const { data, error, isLoading } = useFetchCrypto(limit, currency);
 
   return ( <TableCryptoData data={data || []} error={error} isLoading={isLoading} /> )
 }

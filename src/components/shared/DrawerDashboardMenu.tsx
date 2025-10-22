@@ -19,7 +19,7 @@ import { SidebarProps } from "@/types/CryptoApiTypes";
 export function DrawerDashboardMenu({ data, error, isLoading }:SidebarProps) {
     
     if(isLoading) return <SkeletonComponent />
-    if(error) return <p className="text-red-500">Errore: nessun dato trovato</p>
+    if(error) return <p className="text-red-500 bg-red-200 p-4">Errore: nessun dato trovato</p>
 
   return (
     <Sheet>

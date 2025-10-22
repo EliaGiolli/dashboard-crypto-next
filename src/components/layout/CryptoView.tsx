@@ -1,18 +1,13 @@
 'use client'
 
 //Components
-import { Button } from "../ui/button";
 import MarketCap from "./MarketCap";
-//Internal imports
-import { useRouter } from "next/navigation";
 //External libs
 import { easeIn, motion } from 'motion/react';
 //Icons
-import { Bitcoin } from 'lucide-react';
 import VolumeBarChart from "./VolumeBarChart";
 
 function CryptoView() {
-    const router = useRouter();
 
   return (
     <>

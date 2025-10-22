@@ -6,7 +6,7 @@ import { useFetchCrypto } from "../../custom hooks/useFetchCrypto";
 // Components
 import { SkeletonComponent } from "../shared/SkeletonComponent";
 
-export default function AreaChartComponent() {
+export default function MarketCap() {
   const { data, isLoading, error } = useFetchCrypto();
 
   if(isLoading) return <SkeletonComponent />

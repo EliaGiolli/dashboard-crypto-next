@@ -10,7 +10,7 @@ import { useFetchCrypto } from "../../custom hooks/useFetchCrypto";
 function SidebarWrapper() {
     //It controls the window's width in a more reactive way
     const isDesktop = useMediaQuery('(min-width: 1024px)');
-    const { data, error, isLoading } = useFetchCrypto();
+    const { data, error, isLoading } = useFetchCrypto(10);
     
   return (
     <>
