@@ -9,36 +9,58 @@ import { SkeletonComponent } from "../shared/SkeletonComponent";
 export default function MarketCap() {
   const { data, isLoading, error } = useFetchCrypto();
 
-  if(isLoading) return <SkeletonComponent />
-  if(error) return <p className="text-red-500">Error fetching crypto data</p>
+  if (isLoading) return <SkeletonComponent />;
+  if (error) return <p className="text-red-500 bg-red-200 p-3 rounded">Errore nel caricamento dei dati</p>;
+
   return (
-    <>
-        <div className="w-full h-64 mb-10">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data || []}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="symbol" 
-                tick={{ fill: '#e2e8f0', fontSize: 14 }}
-              />
-              <YAxis 
-                tickFormatter={(value) => `$${(value / 1_000_000).toFixed(1)}M`} 
-                tick={{ fill: '#e2e8f0', fontSize: 14 }} 
-              />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="market_cap"
-                stroke="#8b5cf6"
-                fill="#6d28d9"
-                fillOpacity={1}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-    </>
+    <div className="rounded-xl bg-slate-800 shadow-lg p-6 min-h-[300px] w-full transition-all hover:shadow-xl">
+      <h2 className="text-2xl text-violet-400 font-bold mb-2">Market Cap Totale</h2>
+      <h3 className="text-md text-slate-300 mb-4">
+        Capitalizzazione di mercato delle principali criptovalute
+      </h3>
+      <div className="w-full h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={data || []}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="marketCapGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <XAxis
+              dataKey="symbol"
+              tick={{ fill: '#e2e8f0', fontSize: 13 }}
+              axisLine={{ stroke: "#64748b" }}
+              tickLine={{ stroke: "#475569" }}
+            />
+            <YAxis
+              tickFormatter={(value) => `$${(value / 1_000_000).toFixed(1)}M`}
+              tick={{ fill: '#e2e8f0', fontSize: 13 }}
+              axisLine={{ stroke: "#64748b" }}
+              tickLine={{ stroke: "#475569" }}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1e293b", borderRadius: 8, border: "none" }}
+              labelStyle={{ color: "#e2e8f0", fontWeight: "bold" }}
+              formatter={(value: number) =>
+                `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+              }
+            />
+            <Area
+              type="monotone"
+              dataKey="market_cap"
+              stroke="#8b5cf6"
+              fill="url(#marketCapGradient)"
+              fillOpacity={0.7}
+              animationDuration={800}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }

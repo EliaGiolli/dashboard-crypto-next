@@ -43,9 +43,7 @@ function ChartView() {
             </div>
 
             <div className="px-2 md:px-6">
-              <h3 className="text-xl md:text-2xl text-violet-400 p-5 text-start">Top Crypto Market Cap (USD)</h3>
               <MarketCap />
-              <h3 className="text-xl md:text-2xl text-violet-400 p-5 text-start">Volume di trading nelle ultime 24 ore</h3>
               <VolumeBarChart />
             </div>
 
