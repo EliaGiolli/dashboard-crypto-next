@@ -1,7 +1,9 @@
-import MarketCapSingleCrypto from "@/components/layout/MarketCapSingleCrypto";
-import { CryptoPageProps } from "@/types/CryptoApiTypes";
-import VolumeHistoryChart from "@/components/layout/VolumeHistoryChart";
-import PriceHistoryChart from "@/components/layout/PriceHistoryChart";
+//Components
+import MarketCapSingleCrypto from "../../../components/layout/MarketCapSingleCrypto";
+import VolumeHistoryChart from "../../..//components/layout/VolumeHistoryChart";
+import PriceHistoryChart from "../../..//components/layout/PriceHistoryChart";
+//Types
+import { CryptoPageProps } from "../../..//types/CryptoApiTypes";
 
 export default async function CryptoPage({ params }: CryptoPageProps) {
 

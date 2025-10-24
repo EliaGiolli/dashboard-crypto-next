@@ -4,6 +4,9 @@ import React from "react"
 //Components
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
+import { Button } from "../ui/button";
+//Internal imports
+import { useRouter } from "next/navigation";
 //Types
 import type { SidebarProps } from "../../types/CryptoApiTypes"
 
@@ -13,8 +16,9 @@ export default function TableCryptoData({ data, error, isLoading }: SidebarProps
     if(isLoading) return <Skeleton />
     if(error) return  <p className="text-red-500 bg-red-200 p-4">Errore nel recupero delle crypto</p>;
 
-    const columns = ["Criptovaluta", "Prezzo corrente", "Valore di mercato", "Volume totale", "Cambio di prezzo"];
+    const columns = ["Criptovaluta", "Prezzo corrente", "Valore di mercato", "Volume totale", "Cambio di prezzo", "Preferiti"];
     
+    const router = useRouter();
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-700 shadow-md">
@@ -51,7 +55,7 @@ export default function TableCryptoData({ data, error, isLoading }: SidebarProps
               </td>
               <td className="px-4 py-2 text-right">{item.current_price.toLocaleString()} €</td>
               <td className="px-4 py-2 text-right">{item.market_cap.toLocaleString()} €</td>
-              <td className="px-4 py-2 text-right">{item.total_volume.toLocaleString()} €</td>
+              <td className="px-4 py-2 hidden md:table-cell text-right">{item.total_volume.toLocaleString()} €</td>
               <td className="px-4 py-2 text-right flex items-center justify-end gap-2">
                 {item.price_change_percentage_24h >= 0 ? (
                   <span className="text-green-500">▲</span>
@@ -59,6 +63,14 @@ export default function TableCryptoData({ data, error, isLoading }: SidebarProps
                   <span className="text-red-500">▼</span>
                 )}
                 {item.price_change_percentage_24h.toFixed(2)}%
+              </td>
+              <td className="px-4 py-2 text-center">
+                <Button
+                  variant="default"
+                  onClick={() => router.push('/users/favorites')}  
+                >
+                  Aggiungi a preferiti
+                </Button>
               </td>
             </tr>
           );
