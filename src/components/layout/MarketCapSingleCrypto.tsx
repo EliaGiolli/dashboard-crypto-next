@@ -33,13 +33,9 @@ export default function MarketCapSingleCrypto({ id }: { id: string }) {
     <div className="rounded-xl bg-slate-800 shadow-lg p-6 min-h-[350px] w-full transition-all hover:shadow-xl">
       {isLoading && <SkeletonComponent />}
       {error && <p className="text-red-500 bg-red-200 p-3 rounded">Errore nel caricamento dei dati</p>}
-
+      
       {!isLoading && !error && chartData.length > 0 && (
         <>
-          <h1 className="text-3xl text-violet-400 capitalize font-bold mb-1">Crypto: {id}</h1>
-          <h3 className="text-md text-slate-300 mb-6">
-            Valore storico del market cap negli ultimi 7 giorni
-          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
