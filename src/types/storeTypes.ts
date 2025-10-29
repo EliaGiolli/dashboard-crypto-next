@@ -1,10 +1,6 @@
-export interface UserStore {
-    user: User | null,
-    setUser: (u: any) => void,
-    logout: () => void
-}
-
-interface User {
-    id: string,
-    email: string
+export interface PreferencesStore {
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
+  currency: 'usd' | 'eur';
+  setCurrency: (c: 'usd' | 'eur') => void;
 }

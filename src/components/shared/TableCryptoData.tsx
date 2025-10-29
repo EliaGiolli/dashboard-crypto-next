@@ -4,9 +4,7 @@ import React from "react"
 //Components
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
-import { Button } from "../ui/button";
-//Internal imports
-import { useRouter } from "next/navigation";
+import AddToFavoritesButton from "./AddToFavoriteButton";
 //Types
 import type { SidebarProps } from "../../types/CryptoApiTypes"
 
@@ -17,8 +15,6 @@ export default function TableCryptoData({ data, error, isLoading }: SidebarProps
     if(error) return  <p className="text-red-500 bg-red-200 p-4">Errore nel recupero delle crypto</p>;
 
     const columns = ["Criptovaluta", "Prezzo corrente", "Valore di mercato", "Volume totale", "Cambio di prezzo", "Preferiti"];
-    
-    const router = useRouter();
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-700 shadow-md">
@@ -65,12 +61,7 @@ export default function TableCryptoData({ data, error, isLoading }: SidebarProps
                 {item.price_change_percentage_24h.toFixed(2)}%
               </td>
               <td className="px-4 py-2 text-center">
-                <Button
-                  variant="default"
-                  onClick={() => router.push('/users/favorites')}  
-                >
-                  Aggiungi a preferiti
-                </Button>
+                <AddToFavoritesButton id={item.id}/>
               </td>
             </tr>
           );

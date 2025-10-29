@@ -20,7 +20,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         error:
           "bg-red-600 hover:bg-red-800 text-white focus:border-4 focus:border-red-900 outline-2 outline-red-900 border-2 border-red-900",
-        link: "text-primary underline-offset-4 hover:underline",
+        favorites: "bg-blue-500 hover:bg-blue-600 text-slate-200 hover:text-slate-200 focus:border-4 focus:border-blue-900 outline-2 outline-blue-900 border-2 border--900",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
