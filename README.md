@@ -1,121 +1,130 @@
-# NexCoin - Next Crypto Dashboard (In progress)
+# NexCoin — Next Crypto Dashboard 🚀
 
-A modern, responsive cryptocurrency dashboard built with **Next.js 15**, **TypeScript**, **TailwindCSS 4**, and **ShadCN UI components**. This project fetches data from the public **CoinGecko API** and displays it in both list and chart formats, offering users a fast and visually appealing way to monitor cryptocurrency trends.
+A modern, responsive cryptocurrency dashboard built with **Next.js 15**, **TypeScript**, **TailwindCSS 4**, and **ShadCN UI**. The app fetches real-time data from the CoinGecko API and presents it in interactive charts and tables, offering a clean and fast way to track crypto market trends.
 
 ---
 
 ## Table of Contents
-
 - [Demo](#demo)
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
-- [Usage](#usage)
+- [Usage & Endpoints](#usage--endpoints)
 - [Motivation & Choices](#motivation--choices)
+- [Future Improvements](#future-improvements)
 - [License](#license)
 
 ---
 
 ## Demo
-
-> A live demo will be available soon.
+A live demo will be available soon.
 
 ---
 
 ## Features
-
-- Display real-time cryptocurrency data from CoinGecko API.
-- Interactive charts using **Recharts**.
-- Responsive design with **TailwindCSS**.
-- Mobile-friendly navigation using **ShadCN/Radix Popover**.
-- Dark/light theme support.
-- Modular and reusable components (`MobileMenu`, `About`, `Footer`).
-- Global state for authentication using **RTK** (or optional **Zustand** for simpler state management).
-- API fetching and caching using **TanStack React Query**.
+- Real-time cryptocurrency data via the CoinGecko API
+- Interactive charts using Recharts
+- Responsive design with TailwindCSS 4
+- Mobile-friendly navigation with ShadCN/Radix components
+- Dark / light theme toggle
+- Reusable modular components (Navbar, Sidebar, Footer, charts, tables)
+- Global state management via Zustand
+- Data fetching & caching with TanStack React Query
+- Error boundaries and skeleton loaders for improved UX
 
 ---
 
 ## Technologies Used
-
-- **Next.js 15** – App Router, server/client components, optimized routing.
-- **React 19** – UI framework.
-- **TypeScript 5** – Type safety and developer experience.
-- **TailwindCSS 4** – Utility-first CSS framework.
-- **ShadCN UI** – Headless UI components built on Radix for accessibility and animations.
-- **clsx & class-variance-authority (CVA)** – Conditional styling and component variants.
-- **React Query (TanStack)** – Data fetching and caching.
-- **Zustand** – Global state for authentication.
-- **Zod** – Validation schemas.
-- **Lucide-react** – Lightweight, modern icons.
-- **Recharts** – Interactive charting.
+- Next.js 15 (App Router, Server/Client Components)
+- React 19
+- TypeScript 5
+- TailwindCSS 4
+- ShadCN UI / Radix
+- TanStack React Query
+- Zustand
+- Zod (validation)
+- Lucide-react (icons)
+- Recharts (charts)
 
 ---
 
 ## Project Structure
-```bash
-src/
-├─ assets/ # Images and illustrations
-├─ components/
-│ ├─ shared/ # Reusable components (MobileMenu, Footer, etc.)
-│ └─ ui/ # ShadCN UI wrappers
-├─ pages/ # Routes (Next.js)
-└─ styles/ # Tailwind and global styles
 ```
+src/
+├── app/
+│   ├── crypto/
+│   │   ├── error.tsx
+│   │   └── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── not-found.tsx
+│   ├── page.tsx
+│   └── global-error.tsx
+├── assets/                # images and illustrations
+├── components/
+│   ├── layout/            # pages layout components (Navbar, Footer, Charts)
+│   ├── shared/            # shared UI and utilities (ReactQueryProvider, Sidebar)
+│   └── ui/                # design-system primitives (button, card, table...)
+├── custom hooks/          # useFetchCrypto.ts
+├── lib/                   # utility and helper functions
+├── schemas/               # zod schemas
+├── store/                 # zustand stores for auth and favorites
+└── types/                 # global TypeScript types and interfaces
+```
+
 ---
 
 ## Installation
-
-1. Clone the repository:
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/yourusername/next-cryptodashboard.git
 cd next-cryptodashboard
-```
-Install dependencies:
-
-```bash
 npm install
 ```
+
 Run the development server:
 
 ```bash
 npm run dev
 ```
-The app will be available at http://localhost:3000.
 
-## Usage and endpoints
-### Endpoints
+Open http://localhost:3000 in your browser.
 
-- **/** – Homepage with About section and crypto charts.
+---
 
-- **/crypto** – Crypto list with filters and details.
+## Usage & Endpoints
 
-- **/users** - manages the logic of login and registering a new user
+Routes
+- `/` — Homepage with About section and featured charts
+- `/crypto` — Full cryptocurrency list (sortable / filterable)
+- `/users` — WIP: login/register and favorites
 
-### Usage
-- Buttons and navigation menus use Next.js router for programmatic navigation.
+Notes
+- Data fetching is handled by React Query (TanStack).
+- Authentication and favorites are managed via Zustand (client-side; backend integration planned).
+- Charts are implemented with Recharts and are responsive.
 
-- Reusable components (like MobileMenu and Footer) adapt to dark/light themes automatically.
+---
 
 ## Motivation & Choices
-- Next.js 15: Chosen for modern App Router features, server/client components, and optimized routing.
+- Next.js 15: App Router and server components for performance and DX.
+- Tailwind + ShadCN: fast styling and accessible UI primitives.
+- React Query: robust fetching, caching and background updates.
+- Zustand: lightweight global state management.
+- Recharts: simple, interactive charting for analytics.
 
-- TailwindCSS + ShadCN: Utility-first styling combined with accessible, headless UI components allows fast development without compromising design or accessibility.
+---
 
-- React Query vs RTK Query(optional): React Query chosen for API fetching to simplify caching, refetching, and data management. RTK retained only for global authentication state.
+## Future Improvements
+- Internationalization (i18next: EN, IT, etc.)
+- Backend integration (Next serverless functions or Express + MongoDB)
+- Authentication and persistent favorites
+- Comprehensive tests (Jest + React Testing Library)
+- CI/CD and demo deployment
 
-- Zustand: Considered for simpler global state management in the future if needed.
-
-- Recharts: Provides interactive, responsive charts for crypto data visualization.
-
-- Folder structure: Organized to separate shared components, UI wrappers, assets, and pages for modularity and scalability.
-
-The goal is to build a fast, responsive, and modern crypto dashboard with clean, maintainable code and reusable components.
+---
 
 ## License
-This project is licensed under the MIT License.
-
-
-
-
+This project is licensed under the MIT License. See the LICENSE file for details.
