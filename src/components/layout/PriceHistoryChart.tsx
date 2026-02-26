@@ -12,6 +12,7 @@ interface Props {
 
 export default function PriceHistoryChart({ id, days = 7 }: Props) {
   const { data, isLoading, error } = useFetchSingleCrypto(id, days);
+  console.log('data retrieved?', data)
 
   const chartData = useMemo(() => {
     if (!data?.prices) return [];

@@ -20,7 +20,7 @@ import { formSchema, type FormSchema } from "../../schemas/formSchema"
 // External libs
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { motion } from "motion/react"
+import MotionButton from "./MotionButton"
 
 export function CardForm() {
   const router = useRouter()
@@ -38,7 +38,6 @@ export function CardForm() {
     router.push("/login") // temporaneo, finché non aggiungi le server actions
   }
 
-  const MotionButton = motion(Button)
 
   return (
     <Card className="w-full max-w-sm">
@@ -48,7 +47,7 @@ export function CardForm() {
           Inserisci la tua email e la tua password per accedere
         </CardDescription>
         <CardAction>
-          <Button variant="link">Accedi</Button>
+          <Button variant="outline">Accedi</Button>
         </CardAction>
       </CardHeader>
 
@@ -96,14 +95,9 @@ export function CardForm() {
           </div>
 
           <CardFooter className="p-0">
-            <MotionButton
-              type="submit"
-              className="w-full"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
+           <MotionButton> 
               Login
-            </MotionButton>
+           </MotionButton>
           </CardFooter>
         </form>
       </CardContent>
