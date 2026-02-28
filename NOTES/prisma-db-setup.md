@@ -69,3 +69,9 @@ To generate the db and its migrations, run:
 ```bash
 npx prisma migrate dev --name init
 ```
+In the beginning, whenever we make modifications to the schema, we can run the command
+```bash
+npx prisma db push
+```
+It will push the changes made to the schema to the actual database.
+With the command `npx prisma studio` the prisma studio webpage will be shown on the browser. It allows us to watch the UI of the db.
