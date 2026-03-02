@@ -14,28 +14,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 // Internal imports
-import { useRouter } from "next/navigation"
-import { formSchema, type FormSchema } from "../../schemas/formSchema"
+import { loginSchema, type LoginSchema } from "../../schemas/authSchemas"
 
 // External libs
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import MotionButton from "./MotionButton"
+import { loginAction } from "../../../actions/actions"
 
 export function CardForm() {
-  const router = useRouter()
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
-  } = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = (data: FormSchema) => {
-    console.log("Form submitted:", data)
-    router.push("/login") // temporaneo, finché non aggiungi le server actions
+  const onSubmit = async (data: LoginSchema) => {
+        console.log("Form submitted:", data)
+        const response = await loginAction(data);
+        if (response?.error) {
+          setError("password", { message: response.error});
+        } 
   }
 
 
