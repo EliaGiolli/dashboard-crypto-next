@@ -21,7 +21,7 @@ export async function loginAction(data: { email:string, password: string }): Pro
   }
 
   const isValidPassword = await bcrypt.compare(data.password, user.password);
-  if (isValidPassword) {
+  if (!isValidPassword) {
     return { error: "Password errata" };
   }
   

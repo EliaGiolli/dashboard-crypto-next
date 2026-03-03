@@ -1,5 +1,8 @@
 'use client'
 
+import { useState } from "react"
+import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -23,6 +26,7 @@ import MotionButton from "./MotionButton"
 import { loginAction } from "../../actions/actions"
 
 export function CardForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
     register,
@@ -34,13 +38,14 @@ export function CardForm() {
   })
 
   const onSubmit = async (data: LoginSchema) => {
-        console.log("Form submitted:", data)
-        const response = await loginAction(data);
-        if (response?.error) {
-          setError("password", { message: response.error});
-        } 
-  }
+    setIsSubmitting(true)
+    const response = await loginAction(data)
+    setIsSubmitting(false)
 
+    if (response?.error) {
+      setError("password", { message: response.error })
+    }
+  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -50,7 +55,9 @@ export function CardForm() {
           Inserisci la tua email e la tua password per accedere
         </CardDescription>
         <CardAction>
-          <Button variant="outline">Accedi</Button>
+          <Link href="/auth/register">
+            <Button variant="outline">Non hai un account? Registrati</Button>
+          </Link>
         </CardAction>
       </CardHeader>
 
@@ -76,15 +83,7 @@ export function CardForm() {
           </div>
 
           <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <a
-                href="#"
-                className="text-sm underline-offset-4 hover:underline"
-              >
-                Hai dimenticato la tua password?
-              </a>
-            </div>
+            <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" {...register("password")} />
             {errors.password && (
               <p
@@ -97,10 +96,19 @@ export function CardForm() {
             )}
           </div>
 
-          <CardFooter className="p-0">
-           <MotionButton> 
-              Login
-           </MotionButton>
+          <CardFooter className="flex flex-col items-stretch gap-3 p-0">
+            <MotionButton disabled={isSubmitting}>
+              {isSubmitting ? "Accesso in corso..." : "Login"}
+            </MotionButton>
+            <p className="text-sm text-center text-slate-600">
+              Oppure usa il{" "}
+              <Link
+                href="/auth/login"
+                className="underline underline-offset-4 hover:text-slate-900"
+              >
+                form completo di login
+              </Link>
+            </p>
           </CardFooter>
         </form>
       </CardContent>
