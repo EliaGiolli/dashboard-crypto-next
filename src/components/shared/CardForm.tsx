@@ -20,7 +20,7 @@ import { loginSchema, type LoginSchema } from "../../schemas/authSchemas"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import MotionButton from "./MotionButton"
-import { loginAction } from "../../../actions/actions"
+import { loginAction } from "../../actions/actions"
 
 export function CardForm() {
 

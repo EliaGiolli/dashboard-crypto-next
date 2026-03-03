@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { loginSchema, registerSchema, type LoginSchema, type RegisterSchema } from "../../schemas/authSchemas"
-import { loginAction, registerAction } from "../../../actions/actions"
+import { loginAction, registerAction } from "../../actions/actions"
 
 import { AuthFormProps } from "@/types/authTypes"
 import { Input } from "../ui/input"
