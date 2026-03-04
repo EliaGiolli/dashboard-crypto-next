@@ -10,3 +10,7 @@ export interface AuthFormProps {
 export type AuthResponse = {
     error?: string
 }
+
+export type AuthNavButtonProps = {
+  isAuthenticated: boolean
+}

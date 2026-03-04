@@ -3,9 +3,7 @@
 import Link from 'next/link'
 import { LogIn } from 'lucide-react'
 
-type AuthNavButtonProps = {
-  isAuthenticated: boolean
-}
+import { AuthNavButtonProps } from '@/types/authTypes'
 
 export function AuthNavButton({ isAuthenticated }: AuthNavButtonProps) {
   const href = isAuthenticated ? '/auth/login' : '/auth/register'
