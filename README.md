@@ -9,6 +9,7 @@ A modern, responsive cryptocurrency dashboard built with **Next.js 15**, **TypeS
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Project Structure](#project-structure)
+- [Server-Side Architecture](#server-side-architecture)
 - [Installation](#installation)
 - [Usage & Endpoints](#usage--endpoints)
 - [Motivation & Choices](#motivation--choices)
@@ -67,11 +68,42 @@ src/
 │   ├── shared/            # shared UI and utilities (ReactQueryProvider, Sidebar)
 │   └── ui/                # design-system primitives (button, card, table...)
 ├── custom hooks/          # useFetchCrypto.ts
-├── lib/                   # utility and helper functions
+├── lib/                   # utility and helper functions (Prisma client, etc.)
 ├── schemas/               # zod schemas
 ├── store/                 # zustand stores for auth and favorites
 └── types/                 # global TypeScript types and interfaces
 ```
+
+---
+
+## Server-Side Architecture
+
+The app is built around **Next.js App Router** with a clear split between **server components** (data fetching, auth, layout) and **client components** (interactive UI).
+
+- **Data layer (Prisma + SQLite)**
+  - Prisma schema lives in `prisma/schema.prisma` and uses a **SQLite** datasource.
+  - The Prisma client is generated into `src/generated` and instantiated in `src/lib/prisma.ts`.
+  - Connection string is configured via the `DATABASE_URL` environment variable in `.env`.
+  - To sync the schema with the database, run:
+    ```bash
+    npx prisma db push
+    ```
+
+- **Authentication (server actions)**
+  - Auth logic lives in `src/actions/actions.ts` as **server actions**:
+    - `loginAction` — finds the user by email, verifies the password with `bcrypt`, and starts a session.
+    - `registerAction` — hashes the password, creates the user with Prisma, and starts a session.
+  - Inputs are validated via Zod schemas in `src/schemas/authSchemas.ts`.
+
+- **Session management (HTTP-only cookie)**
+  - On successful login or registration, a `session` cookie is set using `next/headers` `cookies()` API.
+  - The cookie is **HTTP-only** and, in production, marked as `secure`, with a 30‑day `maxAge`.
+  - Server components (for example, `Navbar`) read this cookie on the server to decide whether the user is authenticated.
+
+- **Server components vs client islands**
+  - Pages such as `src/app/crypto/page.tsx` are **server components** that render structural layout and pass data down.
+  - Interactive pieces like `TableCryptoLayout`, `AuthForm`, `MobileMenu`, and the auth button in the navbar are **client components** (`'use client'`) mounted as “islands”.
+  - This keeps heavy data access and auth on the server, while the UI stays smooth and responsive on the client.
 
 ---
 

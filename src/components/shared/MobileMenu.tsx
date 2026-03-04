@@ -1,3 +1,5 @@
+'use client'
+
 //Imports from ShadCN library
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 //Internal imports
