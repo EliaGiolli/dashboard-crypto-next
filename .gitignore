@@ -40,7 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+# Prisma client is generated, not authored — see prisma/schema.prisma
+/src/core/generated/
 
 # testing
 /test-results/

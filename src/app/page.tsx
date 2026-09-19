@@ -1,6 +1,6 @@
-import About from "../components/layout/About";
-import ChartView from "../components/layout/ChartView";
-import CallToAction from "../components/layout/CallToAction";
+import About from "@/features/home/components/About";
+import ChartView from "@/features/home/components/ChartView";
+import CallToAction from "@/features/home/components/CallToAction";
 
 export default function Home() {
   return (

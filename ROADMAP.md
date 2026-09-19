@@ -63,9 +63,11 @@ src/
       actions.ts
       types.ts
       index.ts
+    home/                     # landing-page sections (About, CallToAction, ChartView)
   shared/
     ui/                       # shadcn primitives + atomic presentational components
-    layouts/                  # Navbar, Footer, page shells
+    layouts/                  # Navbar, Footer, MobileMenu
+    providers/                # ReactQueryProvider (removed in Phase 3)
     utils/                    # cn(), currency/number formatters
 ```
 
@@ -177,17 +179,28 @@ established convention; flip is contained to `features/auth` if wanted.
 
 A **pure move**: no logic changes, so the diff stays reviewable and any breakage is an import path.
 
-- [ ] `components/ui/*` → `shared/ui/`
-- [ ] `Navbar`, `Footer` → `shared/layouts/`
-- [ ] `lib/utils.ts` → `shared/utils/`
-- [ ] `lib/prisma.ts` → `core/lib/`; `types/envTypes/*` → `core/types/`
-- [ ] Auth, crypto and watchlist pieces into their feature folders
-- [ ] Prisma generator output → `core/generated`; fix the stale `.gitignore` entry `/src/generated/prisma` (never matched the real output path, so the generated client is currently committed)
-- [ ] **Delete `src/custom hooks/`** — folder name contains a space; its two hooks disappear in Phase 3
-- [ ] **Use `@/` everywhere** — imports are a mix of `@/`, `../../`, and typos like `../../..//types/CryptoApiTypes` (double slash) in `crypto/[id]/page.tsx`
-- [ ] **Split `CryptoApiTypes.ts`** — mixes API shapes with component props; `SidebarProps` is reused as the prop type for three components that share no interface. API shapes → `features/crypto/types.ts`; props colocate
-- [ ] Update `components.json`: `aliases.ui` → `@/shared/ui`, `aliases.utils` → `@/shared/utils`
-- [ ] Confirm `npm run build` passes before touching behaviour
+- [x] `components/ui/*` → `shared/ui/` (plus `SkeletonComponent`, `MotionButton` as atomic UI)
+- [x] `Navbar`, `Footer`, `MobileMenu` → `shared/layouts/`
+- [x] `lib/utils.ts` → `shared/utils/cn.ts` with an `index.ts` barrel
+- [x] `lib/prisma.ts` → `core/lib/`; `types/envTypes/*` → `core/types/`
+- [x] Auth, crypto, watchlist and home pieces into their feature folders
+- [x] Prisma generator output → `core/generated`, regenerated rather than moved
+- [x] `.gitignore` now ignores `/src/core/generated/` (the old `/src/generated/prisma` entry never matched, so build output was being committed). Added `postinstall: prisma generate` so a fresh clone still works
+- [x] **Deleted `src/custom hooks/`** — the two hooks moved to `features/crypto/hooks/` and disappear in Phase 3
+- [x] **All imports rewritten** — 50 files. Fixed the `../../..//types` double-slash typos and the broken `../../assets/crypto-img.jpg` relative path
+- [x] **Split `CryptoApiTypes.ts`** — API shapes stay in `features/crypto/types.ts`; `QueryProviderTypes` moved into the provider that owns it; `SidebarProps` renamed `CryptoListProps` with a note that Phase 3 gives each component its own props
+- [x] Feature barrels (`index.ts`) defining each feature's public surface
+- [x] `components.json` aliases updated so `npx shadcn add` lands in `@/shared/ui`
+- [x] Deleted two confirmed-dead files rather than moving them: `CryptoView.tsx` (imported by nothing) and `lib/auth.ts` (the unused parallel auth implementation Phase 2 would have deleted anyway)
+- [x] Confirmed `npm run build`, `tsc --noEmit` and the unit suite all pass
+
+### The dependency rule is now enforced, not just documented
+
+- [x] ESLint `no-restricted-imports` zones: `shared/` and `core/` cannot import from `features/`; features cannot deep-import each other, only via a barrel
+- [x] Convention that makes it expressible: **relative imports inside a feature, `@/features/x` barrel across features.** The boundary is visible in the import syntax
+- [x] Two real violations this surfaced and fixed:
+  - `shared/layouts/Navbar` imported `features/auth/AuthNavButton` *and* read `cookies()`. Navbar is now presentational with an `authSlot` prop; the session read moved to `features/auth/components/AuthNav`, which the route layout composes in. This also pre-stages the Phase 5 `<Suspense>` work
+  - `shared/providers/ReactQueryProvider` imported its props type from `features/crypto`; it now owns them
 
 ---
 

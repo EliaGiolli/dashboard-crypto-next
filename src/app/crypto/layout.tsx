@@ -1,7 +1,7 @@
 'use client'
 //components
-import SidebarWrapper from "../../components/layout/SidebarWrapper";
-import { ReactQueryProvider } from "../../components/shared/ReactQueryProvider";
+import SidebarWrapper from "@/features/crypto/components/SidebarWrapper";
+import { ReactQueryProvider } from "@/shared/providers/ReactQueryProvider";
 
 export default function CryptoLayout({ children }: Readonly<{ children: React.ReactNode; }>) {
   return (

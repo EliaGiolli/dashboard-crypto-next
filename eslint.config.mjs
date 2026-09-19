@@ -48,6 +48,46 @@ export default tseslint.config(
     },
   },
 
+  // Architecture boundary: app -> features -> shared + core.
+  // Enforced here so the dependency rule is mechanical, not aspirational.
+  {
+    files: ['src/shared/**/*.{ts,tsx}', 'src/core/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features/*', '@/features/**', '**/features/*'],
+              message:
+                'shared/ and core/ must not import from features/. Move the shared piece down into shared/ or core/, or invert the dependency.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Features may only reach each other through a public barrel (index.ts),
+  // never through a deep path.
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features/*/components/*', '@/features/*/lib/*', '@/features/*/hooks/*'],
+              message:
+                'Import another feature through its index.ts barrel (e.g. @/features/watchlist), not a deep path.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Test files get looser rules.
   {
     files: ['**/*.test.{ts,tsx}', 'e2e/**/*.ts', 'tests/**/*.ts'],

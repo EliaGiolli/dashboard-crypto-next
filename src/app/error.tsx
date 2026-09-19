@@ -2,7 +2,7 @@
 //internal imports
 import { useEffect } from 'react'
 //Components
-import { Button } from '../components/ui/button'
+import { Button } from '@/shared/ui/button'
 //Icons
 import { Ban } from 'lucide-react';
 

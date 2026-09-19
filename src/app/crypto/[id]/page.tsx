@@ -1,10 +1,15 @@
 //Components
 'use client'
-import MarketCapSingleCrypto from "../../../components/layout/MarketCapSingleCrypto";
-import VolumeHistoryChart from "../../..//components/layout/VolumeHistoryChart";
-import PriceHistoryChart from "../../..//components/layout/PriceHistoryChart";
-//Types
-import { CryptoPageProps } from "../../..//types/CryptoApiTypes";
+import MarketCapSingleCrypto from "@/features/crypto/components/charts/MarketCapSingleCrypto";
+import VolumeHistoryChart from "@/features/crypto/components/charts/VolumeHistoryChart";
+import PriceHistoryChart from "@/features/crypto/components/charts/PriceHistoryChart";
+
+// NOTE: this page is still the pre-refactor version — it is marked
+// 'use client' yet is async and awaits params, which Next 16 does not allow.
+// Phase 3 rewrites it as a server component using PageProps<'/crypto/[id]'>.
+interface CryptoPageProps {
+  params: { id: string }
+}
 
 import { easeIn, motion } from 'motion/react';
 
