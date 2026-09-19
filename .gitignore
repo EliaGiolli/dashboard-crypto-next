@@ -40,4 +40,19 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+# Prisma client is generated, not authored — see prisma/schema.prisma
+/src/core/generated/
+
+# testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+test.db
+test.db-journal
+
+# env: ignore all except the committed template
+!.env.example
+
+# playwright-mcp session artifacts
+/.playwright-mcp/

@@ -1,4 +1,4 @@
-import TableCryptoLayout from "../../components/layout/TableCryptoLayout";
+import TableCryptoLayout from "@/features/crypto/components/TableCryptoLayout";
 
 
 function page() {

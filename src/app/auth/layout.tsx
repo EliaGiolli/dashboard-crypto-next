@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import React from 'react'
 
 function AuthLayout({ children }: { children: React.ReactNode}) {
