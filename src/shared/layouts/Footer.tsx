@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { Github, Twitter } from "lucide-react"
 
+// Hoisted out of the render. Under cacheComponents, `new Date()` during a
+// render is an unstable value that blocks the route from prerendering — the
+// year is stable enough for a footer to read once at module load.
+const CURRENT_YEAR = new Date().getFullYear()
+
 export function Footer() {
   return (
     <footer
@@ -17,10 +22,10 @@ export function Footer() {
         {/* Link utili */}
         <ul className='hidden md:flex gap-6'>
             <li className='hover:bg-violet-300 hover:text-slate-800 hover:rounded-lg text-lg md:text-xl px-3 py-2 transition-colors duration-200 ease-in-out'>
-                <Link href="/homepage" className='block w-full h-full'>Chi siamo</Link>
+                <Link href="/" className='block w-full h-full'>Chi siamo</Link>
             </li>
             <li className='hover:bg-violet-300 hover:text-slate-800 hover:rounded-lg text-lg md:text-xl px-3 py-2 transition-colors duration-200 ease-in-out'>
-                <Link href="/homepage"className='block w-full h-full'>Le nostre Crypto</Link>
+                <Link href="/crypto" className='block w-full h-full'>Le nostre Crypto</Link>
             </li>    
         </ul>
 
@@ -37,7 +42,7 @@ export function Footer() {
 
       {/* Credits / copyright */}
       <div className="mt-6 text-center text-sm text-gray-500">
-        &copy; {new Date().getFullYear()} CryptoDashboard. All rights reserved.
+        &copy; {CURRENT_YEAR} CryptoDashboard. All rights reserved.
       </div>
     </footer>
   )

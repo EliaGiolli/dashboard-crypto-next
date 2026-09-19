@@ -1,34 +1,25 @@
-'use client'
+import DrawerDashboardMenu from './DrawerDashboardMenu'
+import Sidebar from './Sidebar'
+import type { CryptoMarket } from '../types'
 
-//Components
-import Sidebar from "./Sidebar";
-import { DrawerDashboardMenu } from "./DrawerDashboardMenu";
-//Internal imports
-import { useMediaQuery } from 'usehooks-ts';
-import { useFetchCrypto } from "../hooks/useFetchCrypto";
+interface SidebarWrapperProps {
+  markets: CryptoMarket[]
+}
 
-function SidebarWrapper() {
-    //It controls the window's width in a more reactive way
-    const isDesktop = useMediaQuery('(min-width: 1024px)');
-    const { data, error, isLoading } = useFetchCrypto(10);
-    
+/**
+ * Renders both the desktop sidebar and the mobile drawer and lets CSS decide
+ * which is visible.
+ *
+ * It used to pick between them with `useMediaQuery('(min-width: 1024px)')`
+ * from usehooks-ts, which returns `false` until it resolves in the browser —
+ * so neither one appeared on first paint. A media query is a styling
+ * decision and belongs in the stylesheet.
+ */
+export default function SidebarWrapper({ markets }: SidebarWrapperProps) {
   return (
     <>
-     {isDesktop ? (
-        <Sidebar 
-          data={data} 
-          error={error} 
-          isLoading={isLoading}
-        />
-      ) : (
-        <DrawerDashboardMenu 
-          data={data} 
-          error={error} 
-          isLoading={isLoading}
-        />
-      )}
+      <Sidebar markets={markets} />
+      <DrawerDashboardMenu markets={markets} />
     </>
   )
 }
-
-export default SidebarWrapper

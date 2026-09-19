@@ -10,10 +10,15 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    // Was hardcoded to "file:./dev.db", which silently overrode
-    // env("DATABASE_URL") for every CLI command — including the ones the
-    // integration suite runs against a throwaway test.db. Honouring the
-    // environment first is what keeps tests off the dev database.
+    // The single source of the connection string for every CLI command.
+    // Prisma strips the `url` line out of the schema when a config supplies
+    // one, so this is not a duplicate of it — it is the only copy.
+    //
+    // It was hardcoded to "file:./dev.db", which silently overrode
+    // env("DATABASE_URL"). Reading the environment first is what lets the
+    // integration suite point the CLI at a throwaway test.db; dotenv above
+    // fills it in from .env for normal use, and does not override a value
+    // that is already set.
     url: process.env.DATABASE_URL ?? "file:./dev.db",
   },
 });

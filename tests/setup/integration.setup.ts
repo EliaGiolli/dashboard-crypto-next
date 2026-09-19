@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
 import path from 'node:path'
 
@@ -20,19 +20,30 @@ process.env.COINGECKO_API_URL =
 function removeTestDb() {
   // SQLite leaves -journal / -wal / -shm siblings behind.
   for (const suffix of ['', '-journal', '-wal', '-shm']) {
-    rmSync(`${TEST_DB}${suffix}`, { force: true })
+    try {
+      rmSync(`${TEST_DB}${suffix}`, { force: true })
+    } catch {
+      // Windows refuses to unlink a file another handle still has open. A
+      // leftover here is harmless: test.db is gitignored and the next run's
+      // beforeAll clears it. Failing teardown over it would turn a green
+      // suite red.
+    }
   }
 }
 
 beforeAll(() => {
   removeTestDb()
 
-  // Create the schema in the fresh file. `db push` rather than `migrate deploy`
-  // because the tests care about the current schema, not its history.
-  execFileSync('npx', ['prisma', 'db', 'push', '--skip-generate'], {
+  // `migrate deploy`, not `db push`: in Prisma 6.19 `db push` does not apply
+  // the `datasource.url` override from prisma.config.ts, so it ignores the
+  // DATABASE_URL set here and fails validation. Applying the committed
+  // migrations also asserts they actually produce the current schema.
+  // execSync with one command string, not execFileSync + shell:true: the
+  // latter emits a DEP0190 deprecation warning on every run because an args
+  // array is concatenated rather than escaped.
+  execSync('npx prisma migrate deploy', {
     env: { ...process.env, DATABASE_URL: TEST_DB_URL },
     stdio: 'inherit',
-    shell: true,
   })
 })
 

@@ -286,33 +286,124 @@ unsigned user id, so anyone could set `session=<any user id>` by hand and be tha
 
 ### 3a. Server-only data layer
 
-- [ ] `features/crypto/lib/coingecko.ts` with `import 'server-only'`, `getMarkets()` and `getMarketChart()` using `'use cache'` + `cacheLife('minutes')` — the server-side replacement for `refetchInterval: 30_000`. Arguments become the cache key automatically, so one entry per `(limit, currency)` replaces the per-component client requests
-- [ ] Env collapse: `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_API_URL_SECOND` → server-side `COINGECKO_API_URL`. The endpoint leaves the client bundle; an API key can be added later without leaking it
-- [x] `core/config/envParser.ts` + `core/schema/parserSchema.ts` validating env with Zod at startup *(done in Phase 0)*; still to do: update `env.d.ts` (currently declares an unused `NEXT_PUBLIC_API_KEY` and omits the `_SECOND` var actually used)
+- [x] `features/crypto/lib/coingecko.ts` — `server-only`, `getMarkets()` and `getMarketChart()` with
+      `'use cache'` + `cacheLife('minutes')`. Arguments key the entry automatically, so one
+      `(limit, currency)` entry now serves every component that used to issue its own request
+- [x] URL building and `parseCurrency` split into `lib/endpoints.ts` — plain functions, because a
+      `'use cache'` module cannot run under Vitest. That is what makes the query strings testable
+- [x] Env collapse: `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_API_URL_SECOND` → server-side
+      `COINGECKO_API_URL`. Both removed from `.env`/`.env.example`; `env.d.ts` now declares the four
+      server variables instead of the unused `NEXT_PUBLIC_API_KEY`
+- [x] **`cacheComponents: true` enabled** — the Phase 0 deferral. The build is now a real gate
 
 ### 3b. Pages become server components
 
-- [ ] `/` and `/crypto` call `getMarkets()` and pass plain arrays down
-- [ ] Rewrite `crypto/[id]/page.tsx` — currently `'use client'` **and** `async` **and** awaits `params`, which is invalid and fatal under Next 16's enforced async request APIs. Type it `PageProps<'/crypto/[id]'>` with `const { id } = await props.params`
-- [ ] **Currency becomes a `?currency=` search param**, replacing the dead Zustand field. The server needs it to key the cache anyway, and the selection becomes shareable
-- [ ] Add the `loading.tsx` files that don't exist today; reuse `SkeletonComponent`
-- [ ] Wrap per-section server fetches in `<Suspense>`
+- [x] `/` and `/crypto` call `getMarkets()` and pass plain arrays down
+- [x] `crypto/[id]/page.tsx` rewritten as `PageProps<'/crypto/[id]'>` with `await props.params`. It
+      was `'use client'` *and* `async` *and* awaited `params`, then read `params.id` unawaited too
+- [x] **Currency is a `?currency=` search param**, replacing the dead Zustand field. Verified in the
+      browser: `?currency=eur` returns real EUR figures, `?currency=usd` returns dollar figures
+- [x] `loading.tsx` for `/crypto`, `/crypto/[id]` and `/dashboard` — under `cacheComponents` these
+      are the `<Suspense>` boundaries the runtime reads need, not decoration
+- [x] The `searchParams` promise is passed *into* the boundary rather than awaited in the page body,
+      so the static parts of each route still prerender
+- [x] `auth/layout.tsx` keeps its session read in its own `<Suspense>`: a layout cannot rely on its
+      own `loading.tsx`, which wraps the page beneath it
 
 ### 3c. Charts: atomic and presentational
 
-- [ ] `features/crypto/components/charts/chart-theme.ts` — shared axis/grid/tooltip props, colors, and the `$`/`M` formatters currently redefined in all five files
-- [ ] `SeriesAreaChart` / `SeriesBarChart` — generic, `{ data, xKey, yKey, color, formatY }`
-- [ ] Move timestamp→`{date, value}` mapping out of `useMemo` in each component into a tested adapter in `features/crypto/lib/`
-- [ ] **Fix SVG gradient id collision** — `MarketCap` and `MarketCapSingleCrypto` both define `id="marketCapGradient"`, and the two volume charts both use `id="volumeGradient"`. SVG ids are document-global, so on `/crypto/[id]` the second chart silently renders the first one's fill. Generate with `useId()`
-- [ ] Charts lose their `isLoading`/`error` branches (streaming and `error.tsx` cover those)
+- [x] `charts/chart-theme.ts` — axis/grid/tooltip props, colours and the card class, previously
+      copy-pasted with small drifts across all five files
+- [x] `SeriesAreaChart` / `SeriesBarChart` — one generic pair replacing five bespoke charts
+- [x] Timestamp to `{x, y}` mapping moved out of three `useMemo`s into `lib/chart-data.ts`, with
+      tests. It uses a **fixed** locale: `toLocaleDateString()` with no argument follows the
+      runtime's locale, which is a hydration mismatch waiting to happen once charts render on the
+      server
+- [x] **SVG gradient id collision fixed** with `useId()`. Verified on `/crypto/bitcoin`: three
+      charts, three unique gradient ids, three distinct fills
+- [x] Charts lost their `isLoading` / `error` branches, and `CryptoListProps` is gone with them
+- [x] Each chart container is `role="img"` with a meaningful `aria-label` *(Phase 6 item, landed
+      here because the charts were being rewritten anyway)*
 
 ### 3d. Delete the client fetching stack
 
-- [ ] Remove `src/custom hooks/` and `ReactQueryProvider.tsx` — the latter builds `new QueryClient()` at module scope (shared across requests on the server) and is mounted **twice** (in `crypto/layout.tsx` and inside `ChartView.tsx`), creating two independent caches
-- [ ] Drop `@tanstack/react-query` and `zustand`
-- [ ] Replace `SidebarWrapper`'s `useMediaQuery` with CSS (`hidden lg:block` / `lg:hidden`) — the JS media query renders **nothing** on first paint until it resolves client-side. Drop `usehooks-ts`
+- [x] `src/features/crypto/hooks/` and `shared/providers/ReactQueryProvider.tsx` deleted
+- [x] Dropped `@tanstack/react-query` and `usehooks-ts`
+- [x] `SidebarWrapper` renders both variants and lets CSS choose (`hidden lg:flex` / `lg:hidden`).
+      `useMediaQuery` resolved only after hydration, so neither appeared on first paint
+- [ ] ~~Drop `zustand` in Phase 3~~ → **deferred to Phase 4.** `FavoriteButton` is still the only
+      favourites implementation; removing the store now would leave it non-functional for a whole
+      phase. The dead `currency` / `setCurrency` fields were removed, which is the part this phase
+      actually replaces
 
----
+### Verified in the browser, not just in the build
+
+- [x] **Zero** `api.coingecko.com` requests from the browser on `/crypto` (was three per load)
+- [x] Console clean on `/`, `/crypto`, `/crypto/[id]` and `/auth/login` — 0 errors, 0 warnings
+- [x] Build output: **every route is now `Partial Prerender`**, against the Phase 0 baseline where
+      every route was `Dynamic` and nothing was static. `/crypto` and `/crypto/[id]` report
+      `Revalidate 1m / Expire 1h`, which is `cacheLife('minutes')`
+
+### Four bugs the build did not catch, found by opening the app
+
+The build passes them because each sits inside a `<Suspense>` boundary, so it is deferred to runtime
+and never rendered during static generation. **A green build is not evidence these pages work.**
+
+- [x] **Functions passed across the RSC boundary.** The charts took `formatY` / `formatValue`
+      callbacks from Server Components — "Functions cannot be passed directly to Client Components".
+      They now take `currency` and a `yFormat: 'compact' | 'price'` string and build the formatters
+      client-side
+- [x] **`buttonVariants` was exported from a `'use client'` module**, so calling it from a Server
+      Component failed with "Attempted to call buttonVariants() from the server". Split into
+      `shared/ui/button-variants.ts`; `button.tsx` re-exports it for client callers
+- [x] **Hydration mismatch in `About`** — the server rendered the CTA anchor and the client dropped
+      it, so the link was missing from the DOM after hydration. Fixed by the split above: a
+      server-rendered `<Link>` with `buttonVariants()` classes needs no client component at all
+- [x] **`motion()` is deprecated** — now `motion.create()`, and hoisted to module scope
+
+### Landed alongside, and why
+
+Enabling `cacheComponents` and rewriting these files forced several Phase 5/6 items early — leaving
+them would have meant knowingly shipping a red build or re-breaking code being rewritten.
+
+- [x] `app/layout.tsx` — the session read is now in `<Suspense>`, which is what lets any route
+      prerender at all *(Phase 5)*
+- [x] `Footer` — `new Date().getFullYear()` hoisted to module scope (an unstable render value blocks
+      prerendering), and both `/homepage` links fixed to `/` and `/crypto` *(Phase 5)*
+- [x] `TableCryptoData` — money columns formatted in the currency actually requested, instead of a
+      hardcoded euro sign on USD data; the `next/image` aspect-ratio warning fixed by dropping the
+      overriding `className` *(Phase 5)*
+- [x] `About` / `ChartView` — `motion(Button)` in the component body removed entirely, and
+      `router.push()` replaced with a real `<Link>` *(Phase 5 + Phase 6)*
+- [x] `crypto/[id]` — redundant `role="region"` removed *(Phase 5)*
+- [x] `/crypto` — added the `<h1>` the `aria-labelledby` was already pointing at, and hid the
+      "Volume totale" `<th>` at the same breakpoint as its cells (6 headers vs 5 body cells on
+      mobile) *(Phase 6)*
+- [x] `global-error.tsx` `lang='it'` was **already fixed in the working tree** by someone else; it
+      rides along in this commit *(Phase 6)*
+
+### Gotchas worth remembering
+
+- **`prisma migrate dev` strips `url = env("DATABASE_URL")` out of the schema** when
+  `prisma.config.ts` also declares a datasource — and Prisma validates the schema *before* applying
+  that override, so every CLI command then fails with P1012. Both are now present and a comment in
+  the schema says not to remove it
+- **`prisma db push` ignores the config's `datasource.url`** in 6.19, so the integration suite uses
+  `migrate deploy`, which respects it — and which also asserts the migrations produce the current
+  schema
+- **The build can OOM on this machine** when the dev server, a browser and 11 build workers run at
+  once. It is memory pressure, not a code fault: the build is green when run on its own
+
+### Tests written this phase
+
+- [x] Unit — `buildMarketsUrl` / `buildMarketChartUrl` / `parseCurrency`, including the regression
+      where `currency` was in the query key but `vs_currency=usd` was hardcoded in the URL
+- [x] Unit — chart adapters, including the fixed-locale label
+- [x] Unit — `formatCurrency` / `formatCompactCurrency` / `formatPercent`, including the
+      hardcoded-euro-on-USD regression
+- [x] Integration setup fixed: `migrate deploy` instead of `db push`, `execSync` instead of
+      `execFileSync` + `shell: true` (which emitted a DEP0190 warning on every run), Prisma
+      disconnected before teardown, and teardown tolerant of Windows keeping the file open
 
 ## Phase 4 — Watchlist feature
 
@@ -328,18 +419,18 @@ unsigned user id, so anyone could set `session=<any user id>` by hand and be tha
 ## Phase 5 — Bug sweep and dead code
 
 - [x] `AuthNavButton` — inverted: an authenticated user is shown "Accedi" → `/auth/login`. Becomes a logout control *(done in Phase 2: real sessions needed a way to end them)*
-- [ ] `getMarkets` — `currency` was in the query key but the URL hardcoded `vs_currency=usd`, so "eur" returned USD cached under a eur key (fixed in 3a)
-- [ ] `TableCryptoData` — prints `€` on all four money columns while the API returns USD
+- [x] `getMarkets` — `currency` was in the query key but the URL hardcoded `vs_currency=usd`, so "eur" returned USD cached under a eur key *(done in Phase 3)*
+- [x] `TableCryptoData` — prints `€` on all four money columns while the API returns USD *(done in Phase 3)*
 - [ ] `MobileMenu` — "Le nostre Crypto" links to `/projects`, which does not exist. Should be `/crypto`
-- [ ] `Footer.tsx:20,23` — **both** nav links point to `/homepage`, which does not exist either. Should be `/` and `/crypto` (found by running the app)
-- [ ] `TableCryptoData` — `next/image` gets `width`/`height` 24 but `className="w-6 h-6"` overrides them, so every page load logs 10 aspect-ratio warnings. Add `style={{ width: 'auto', height: 'auto' }}` or drop the className
-- [ ] `About.tsx` / `ChartView.tsx` — `const MotionButton = motion(Button)` inside the component body creates a new component type every render, remounting the button. Hoist to module scope or use the existing `MotionButton.tsx`
-- [ ] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>`
+- [x] `Footer.tsx:20,23` — **both** nav links point to `/homepage`, which does not exist either. Should be `/` and `/crypto` (found by running the app) *(done in Phase 3)*
+- [x] `TableCryptoData` — `next/image` gets `width`/`height` 24 but `className="w-6 h-6"` overrides them, so every page load logs 10 aspect-ratio warnings. Dropped the className *(done in Phase 3)*
+- [x] `About.tsx` / `ChartView.tsx` — `const MotionButton = motion(Button)` inside the component body creates a new component type every render, remounting the button. Removed entirely; `MotionButton.tsx` hoisted to module scope and moved to `motion.create()` *(done in Phase 3)*
+- [x] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>` *(done in Phase 3)*
 - [ ] Dead code — `CryptoView.tsx` is imported by nothing; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`
 - [x] Duplicate email — Better Auth handles this now; surfaced in the form via `toFormError` *(done in Phase 2)*
-- [ ] `Footer.tsx:40` — `new Date().getFullYear()` during render is an unstable value that **blocks prerendering** under `cacheComponents` (found by the Phase 0 trial build). Hoist to module scope
-- [ ] `global-error.tsx:13` — its `<html>` element has no `lang` prop at all (found by the new jsx-a11y rule)
-- [ ] `crypto/[id]/page.tsx:21` — redundant `role="region"` on a `<section>` that already has that implicit role
+- [x] `Footer.tsx:40` — `new Date().getFullYear()` during render is an unstable value that **blocks prerendering** under `cacheComponents` (found by the Phase 0 trial build). Hoist to module scope *(done in Phase 3)*
+- [x] `global-error.tsx:13` — its `<html>` element has no `lang` prop at all (found by the new jsx-a11y rule) *(already fixed in the working tree; rides along with Phase 3)*
+- [x] `crypto/[id]/page.tsx:21` — redundant `role="region"` on a `<section>` that already has that implicit role *(done in Phase 3)*
 - [ ] Drop `pg` — a dependency, but the datasource is SQLite and nothing imports it
 
 ---
@@ -362,12 +453,12 @@ per-route titles, no `generateMetadata`, no sitemap, robots or OG image.
 ### Accessibility fixes (all verified in the current code)
 
 - [ ] `src/app/layout.tsx:30` — `<html lang="en">` while **every string in the UI is Italian**. Screen readers pick pronunciation from this. Should be `lang="it"`
-- [ ] `src/app/crypto/page.tsx:7` — `aria-labelledby="main-title"` points at an id **nothing in that subtree renders**; the region has no accessible name
-- [ ] `TableCryptoData` — the `columns` array renders **6** `<th>` cells but the "Volume totale" `<td>` is `hidden md:table-cell`, so on mobile every body row has **5** cells against 6 headers. Hide the matching `<th>` at the same breakpoint
-- [ ] `TableCryptoData` — the only heading is an `<h3>` outside the table, so `/crypto` has **no `<h1>`** and heading order starts at 3. Add an `<h1>` (also fixes the `aria-labelledby` above) and use `<caption>`
-- [ ] `About.tsx` / `ChartView.tsx` — navigation as `<Button onClick={() => router.push('/crypto')}>`. A button is not a link: no middle-click, no open-in-new-tab, announced as "button". Use `<Link>` styled as a button, which also drops `useRouter` and lets both become server components
+- [x] `src/app/crypto/page.tsx:7` — `aria-labelledby="main-title"` points at an id **nothing in that subtree renders**; the region has no accessible name *(done in Phase 3)*
+- [x] `TableCryptoData` — the `columns` array renders **6** `<th>` cells but the "Volume totale" `<td>` is `hidden md:table-cell`, so on mobile every body row has **5** cells against 6 headers. Hide the matching `<th>` at the same breakpoint *(done in Phase 3)*
+- [~] `TableCryptoData` — the only heading is an `<h3>` outside the table, so `/crypto` has **no `<h1>`** and heading order starts at 3. `<h1>` added and the `<h3>` promoted to `<h2>` in Phase 3; **`<caption>` still to do**
+- [x] `About.tsx` / `ChartView.tsx` — navigation as `<Button onClick={() => router.push('/crypto')}>`. A button is not a link: no middle-click, no open-in-new-tab, announced as "button". Both are now `<Link>` styled with `buttonVariants()` and are server components *(done in Phase 3)*
 - [ ] `error.tsx` / `crypto/error.tsx` — `text-slate-200` and `text-red-400` on `bg-red-200` both fail WCAG AA contrast; error text should be in an `aria-live`/`role="alert"` region
-- [ ] Charts — Recharts output is inert to assistive tech. Give each container `role="img"` with a meaningful `aria-label`; pair the `/crypto` charts with the data table as text alternative
+- [x] Charts — Recharts output is inert to assistive tech. Each container is now `role="img"` with a meaningful `aria-label` *(done in Phase 3)*; **pairing the `/crypto` charts with the table as a text alternative is still to do**
 
 ---
 

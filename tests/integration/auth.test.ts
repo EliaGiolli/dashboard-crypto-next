@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 // Better Auth's `nextCookies()` plugin writes through next/headers, and
 // `auth.api.*` takes a Headers object. Neither exists outside a Next request,
@@ -34,6 +34,12 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await prisma.user.deleteMany()
+})
+
+afterAll(async () => {
+  // Windows will not delete an open SQLite file, and the global teardown
+  // removes test.db right after this.
+  await prisma.$disconnect()
 })
 
 describe('sign-up', () => {
@@ -78,7 +84,7 @@ describe('sign-in', () => {
   })
 
   it('issues a session cookie that resolves back to the user', async () => {
-    await signUp()
+    const { user } = await signUp()
 
     const response = await auth.api.signInEmail({
       body: { email: EMAIL, password: PASSWORD },
@@ -101,7 +107,13 @@ describe('sign-in', () => {
 
     // The session is a real row, not a bearer-the-user-id cookie: the old
     // implementation let anyone set `session=<any user id>` by hand.
-    expect(await prisma.session.count()).toBe(1)
+    //
+    // Two rows, not one: signing up already signs the user in, so the
+    // explicit sign-in above opens a second session.
+    const rows = await prisma.session.findMany()
+    expect(rows).toHaveLength(2)
+    expect(rows.every((row) => row.userId === user.id)).toBe(true)
+    expect(rows.every((row) => row.token !== user.id)).toBe(true)
   })
 
   it('does not resolve a session from a forged cookie holding a raw user id', async () => {
