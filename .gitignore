@@ -53,3 +53,6 @@ test.db-journal
 
 # env: ignore all except the committed template
 !.env.example
+
+# playwright-mcp session artifacts
+/.playwright-mcp/
