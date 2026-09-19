@@ -1,10 +1,7 @@
-import React from 'react'
-import { AuthForm } from '@/features/auth/components/AuthForm';
+import { AuthForm } from '@/features/auth'
 
 function RegisterPage() {
-  return (
-    <AuthForm mode='register' />
-  )
+  return <AuthForm mode="register" />
 }
 
-export default RegisterPage;
+export default RegisterPage

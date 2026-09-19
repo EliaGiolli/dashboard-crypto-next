@@ -1,5 +1,4 @@
-import { cookies } from 'next/headers'
-
+import { getCurrentUser } from '../lib/session'
 import { AuthNavButton } from './AuthNavButton'
 
 /**
@@ -9,12 +8,11 @@ import { AuthNavButton } from './AuthNavButton'
  * It exists so `shared/layouts/Navbar` can stay presentational: reading the
  * session is an auth concern, and shared/ must not import from features/.
  *
- * Phase 2 swaps the raw cookie read for Better Auth's `getCurrentUser()`.
- * Phase 5 wraps this in <Suspense> so the rest of the navbar can prerender.
+ * Phase 5 wraps this in <Suspense> so the rest of the navbar can prerender —
+ * `getCurrentUser()` reads headers, which makes every route dynamic today.
  */
 export async function AuthNav() {
-  const cookieStore = await cookies()
-  const isAuthenticated = !!cookieStore.get('session')
+  const user = await getCurrentUser()
 
-  return <AuthNavButton isAuthenticated={isAuthenticated} />
+  return <AuthNavButton isAuthenticated={!!user} />
 }

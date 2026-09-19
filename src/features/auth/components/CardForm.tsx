@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from "react"
 import Link from "next/link"
 
 import { Button } from "@/shared/ui/button"
@@ -15,37 +14,19 @@ import {
 } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
-
-// Internal imports
-import { loginSchema, type LoginSchema } from "../schemas/authSchemas"
-
-// External libs
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import MotionButton from "@/shared/ui/MotionButton"
-import { loginAction } from "../actions"
 
+import { useAuthForm } from "../hooks/useAuthForm"
+
+/**
+ * Login-only card used by the landing page's call to action.
+ *
+ * It now shares `useAuthForm` with `AuthForm` instead of keeping a second copy
+ * of the RHF wiring and its own `isSubmitting` state. Phase 5 folds the whole
+ * component into `<AuthForm mode="login" />`.
+ */
 export function CardForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<LoginSchema>({
-    resolver: zodResolver(loginSchema),
-  })
-
-  const onSubmit = async (data: LoginSchema) => {
-    setIsSubmitting(true)
-    const response = await loginAction(data)
-    setIsSubmitting(false)
-
-    if (response?.error) {
-      setError("password", { message: response.error })
-    }
-  }
+  const { register, errors, isSubmitting, onSubmit } = useAuthForm("login")
 
   return (
     <Card className="w-full max-w-sm">
@@ -62,14 +43,17 @@ export function CardForm() {
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="m@example.com"
               {...register("email")}
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "error-email" : undefined}
             />
             {errors.email && (
               <p
@@ -84,7 +68,14 @@ export function CardForm() {
 
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register("password")} />
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              {...register("password")}
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "error-password" : undefined}
+            />
             {errors.password && (
               <p
                 id="error-password"

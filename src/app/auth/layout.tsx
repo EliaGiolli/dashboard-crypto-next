@@ -2,8 +2,12 @@ import Link from "next/link"
 import { Button } from '@/shared/ui/button';
 import React from 'react'
 
-function AuthLayout({ children }: { children: React.ReactNode}) {
-  const isAuthenticated = false;
+import { getCurrentUser } from '@/features/auth';
+
+async function AuthLayout({ children }: { children: React.ReactNode}) {
+  // Was hardcoded to `false` while the hand-rolled auth was in place, so the
+  // CTA always read "Crea un account". Now it reflects the real session.
+  const isAuthenticated = !!(await getCurrentUser());
   return (
     <main className='grid grid-cols-1 md:grid-cols-2 min-h-screen bg-slate-300 text-slate-800'>
       <section className='flex flex-col items-center justify-center p-8 gap-y-8'>

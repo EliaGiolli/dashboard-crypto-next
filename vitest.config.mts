@@ -1,9 +1,19 @@
+import path from 'node:path'
+
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    alias: {
+      // `server-only` throws by design when it is pulled into a client module
+      // graph, and Vitest is neither graph. Stubbing it lets the node project
+      // import the real `core/lib/auth` and `features/auth/lib/session`.
+      'server-only': path.resolve(__dirname, 'tests/setup/server-only.stub.ts'),
+    },
+  },
   test: {
     projects: [
       {

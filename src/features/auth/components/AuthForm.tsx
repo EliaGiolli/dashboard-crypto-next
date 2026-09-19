@@ -2,12 +2,6 @@
 
 import Link from "next/link"
 
-import { useForm, type FieldErrors } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { loginSchema, registerSchema, type LoginSchema, type RegisterSchema } from "../schemas/authSchemas"
-import { loginAction, registerAction } from "../actions"
-
-import { AuthFormProps } from "../types"
 import { Input } from "@/shared/ui/input"
 import { Button } from "@/shared/ui/button"
 import {
@@ -20,28 +14,16 @@ import {
 } from "@/shared/ui/card"
 import { Label } from "@/shared/ui/label"
 
+import { useAuthForm } from "../hooks/useAuthForm"
+import type { AuthFormProps } from "../types"
+
+/**
+ * Presentational: every decision (schema, Server Function, error mapping)
+ * lives in `useAuthForm`. This file is markup.
+ */
 export function AuthForm({ mode }: AuthFormProps) {
-  const isRegister = mode === "register"
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<LoginSchema | RegisterSchema>({
-    resolver: zodResolver(isRegister ? registerSchema : loginSchema),
-  })
-
-  const onSubmit = async (data: RegisterSchema | LoginSchema) => {
-    const action = isRegister ? registerAction : loginAction
-    const response = await action(data as RegisterSchema | LoginSchema)
-
-    if (response && "error" in response && response.error) {
-      setError("password", {
-        message: response.error,
-      })
-    }
-  }
+  const { isRegister, register, errors, isSubmitting, onSubmit } =
+    useAuthForm(mode)
 
   return (
     <Card className="w-full max-w-md shadow-lg bg-white/90">
@@ -57,11 +39,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       </CardHeader>
 
       <CardContent>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-          noValidate
-        >
+        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -79,7 +57,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 role="alert"
                 className="text-sm text-red-600"
               >
-                {errors.email.message as string}
+                {errors.email.message}
               </p>
             )}
           </div>
@@ -102,46 +80,46 @@ export function AuthForm({ mode }: AuthFormProps) {
                 role="alert"
                 className="text-sm text-red-600"
               >
-                {errors.password.message as string}
+                {errors.password.message}
               </p>
             )}
           </div>
 
           {isRegister && (
-            (() => {
-              const registerErrors = errors as FieldErrors<RegisterSchema>
-
-              return (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="confirmPassword">Conferma password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    {...register("confirmPassword")}
-                    aria-invalid={!!registerErrors.confirmPassword}
-                    aria-describedby={
-                      registerErrors.confirmPassword
-                        ? "auth-confirm-password-error"
-                        : undefined
-                    }
-                  />
-                  {registerErrors.confirmPassword && (
-                    <p
-                      id="auth-confirm-password-error"
-                      role="alert"
-                      className="text-sm text-red-600"
-                    >
-                      {registerErrors.confirmPassword.message as string}
-                    </p>
-                  )}
-                </div>
-              )
-            })()
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmPassword">Conferma password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                {...register("confirmPassword")}
+                aria-invalid={!!errors.confirmPassword}
+                aria-describedby={
+                  errors.confirmPassword
+                    ? "auth-confirm-password-error"
+                    : undefined
+                }
+              />
+              {errors.confirmPassword && (
+                <p
+                  id="auth-confirm-password-error"
+                  role="alert"
+                  className="text-sm text-red-600"
+                >
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
           )}
 
-          <Button type="submit" className="mt-2 w-full">
-            {isRegister ? "Registrati" : "Accedi"}
+          <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
+            {isSubmitting
+              ? isRegister
+                ? "Registrazione in corso..."
+                : "Accesso in corso..."
+              : isRegister
+                ? "Registrati"
+                : "Accedi"}
           </Button>
         </form>
       </CardContent>

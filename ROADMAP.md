@@ -206,24 +206,81 @@ A **pure move**: no logic changes, so the diff stays reviewable and any breakage
 
 ## Phase 2 — Better Auth
 
-Replaces the hand-rolled auth **and closes the security hole**: the current `session` cookie is a raw
-unsigned user id, so anyone can set `session=<any user id>` by hand and be that user.
+Replaces the hand-rolled auth **and closes the security hole**: the old `session` cookie was a raw
+unsigned user id, so anyone could set `session=<any user id>` by hand and be that user.
 
-- [ ] `npm i better-auth`; remove `bcrypt` and `@types/bcrypt`
-- [ ] Env: `BETTER_AUTH_SECRET` (≥32 chars, `openssl rand -base64 32`) and `BETTER_AUTH_URL=http://localhost:3000`
-- [ ] `core/lib/auth.ts` — `betterAuth({ database: prismaAdapter(prisma, { provider: 'sqlite' }), emailAndPassword: { enabled: true }, plugins: [nextCookies()] })` (check plugin-ordering note in the docs)
-- [ ] `core/lib/auth-client.ts` — `createAuthClient()` from `better-auth/react`
-- [ ] `src/app/api/auth/[...all]/route.ts` — `export const { GET, POST } = toNextJsHandler(auth)`
-- [ ] Schema: `npx auth@latest generate` writes `User`, `Session`, `Account`, `Verification`. Credentials move from `User.password` into an `Account` row, so `User.password` goes away. Keep the `Watchlist` relation
-- [ ] `npx prisma migrate reset` (**deletes existing dev.db users, as agreed**) + `npx prisma migrate dev --name better-auth`
-- [ ] `features/auth/lib/session.ts` — `getCurrentUser()` wrapping `auth.api.getSession({ headers: await headers() })`, memoised with `React.cache`. **Single place session handling lives.** Runtime API → every caller behind `<Suspense>`
-- [ ] `src/proxy.ts` — Next 16's replacement for `middleware.ts`, Node runtime, `matcher: ['/dashboard']`. Cookie-only checks are documented as *not secure*, so protected pages validate server-side too
-- [ ] **Create `/dashboard`** — both auth actions `redirect('/dashboard')` against a route that does not exist, so **every successful login and registration lands on a 404 today**
-- [ ] Move RHF wiring out of `AuthForm` into `features/auth/hooks/useAuthForm.ts`, leaving `AuthForm` presentational
-- [ ] Each action starts with an auth check + `safeParse`; keep `redirect()` outside any `try/catch` (it works by throwing)
-- [ ] **Delete both old implementations:** `src/actions/actions.ts` and `src/lib/auth.ts` (the latter is a complete parallel implementation that **nothing imports**)
+- [x] `npm i better-auth` (1.7.5); removed `bcrypt` and `@types/bcrypt`
+- [x] Env: `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` — already generated and schema-validated in
+      Phase 0, so nothing to add here
+- [x] `core/lib/auth.ts` — `betterAuth({ database: prismaAdapter(prisma, { provider: 'sqlite' }),
+      emailAndPassword: { enabled: true }, plugins: [nextCookies()] })`, `server-only`.
+      `nextCookies()` is last in the plugin array (it is the after-hook that flushes Set-Cookie into
+      next/headers, so everything that sets a cookie must run before it)
+- [x] `minPasswordLength: 6` pinned explicitly — Better Auth defaults to **8**, which would have let
+      a 6-character password pass `loginSchema`/`registerSchema` in the browser and then be rejected
+      by a round-trip
+- [x] `core/lib/auth-client.ts` — `createAuthClient()` from `better-auth/react`, no `baseURL` (the
+      client defaults to the current origin, so no NEXT_PUBLIC_ var is needed)
+- [x] `src/app/api/auth/[...all]/route.ts` — `export const { GET, POST } = toNextJsHandler(auth)`
+- [x] Schema: `User`, `Session`, `Account`, `Verification` added, `User.password` dropped
+      (credentials now live on an `Account` row with `providerId = "credential"`), `Watchlist`
+      relation kept and given `onDelete: Cascade`
+  - Written from the library's own `getAuthTables()` output rather than `npx @better-auth/cli
+    generate`: the CLI is versioned separately (1.4.21 against better-auth 1.7.5) and has to resolve
+    `@/*` aliases plus a `server-only` import to load the config. Dumping the table definitions the
+    adapter actually uses is exact and verifiable
+- [x] `npx prisma migrate reset` (deleted existing dev.db users, **with explicit consent** — Prisma
+      refuses destructive migrate commands invoked by an agent) + `npx prisma migrate dev --name
+      better-auth`, applied as `20260919164514_better_auth`
+- [ ] `npx prisma generate` — **blocked by a file lock.** A running `npm run dev` holds
+      `src/core/generated/query_engine-windows.dll.node` open, so the rename fails with EPERM. Stop
+      the dev server and re-run; the schema is already migrated, only the client is stale
+- [x] `features/auth/lib/session.ts` — `getSession()` wrapping `auth.api.getSession({ headers: await
+      headers() })` and memoised with `React.cache`, plus `getCurrentUser()` and `requireUser()`.
+      **Single place session handling lives.** Runtime API → every caller behind `<Suspense>`
+- [x] `src/proxy.ts` — Next 16's replacement for `middleware.ts`, `matcher: ['/dashboard']`. Node
+      runtime is the default in 16 and setting `runtime` in a proxy file is an error, so it is not
+      set. The cookie check is optimistic only; `/dashboard` calls `requireUser()` for the real one
+- [x] **Created `/dashboard`** — both auth actions redirected to a route that did not exist, so
+      every successful login and registration landed on a 404
+- [x] RHF wiring moved out of `AuthForm` into `features/auth/hooks/useAuthForm.ts`; `AuthForm` is now
+      markup only. Pending state is RHF's `formState.isSubmitting`, as decided in the API map
+- [x] Each action starts with `safeParse` against the same schema the form used (Server Functions are
+      reachable by direct POST); `redirect()` stays outside every `try/catch`
+- [x] **Both old implementations were already gone** — `src/actions/actions.ts` became
+      `features/auth/actions.ts` in Phase 1 and `src/lib/auth.ts` was deleted there
 
----
+### Landed alongside, and why
+
+- [x] `AuthNavButton` un-inverted and given a real sign-out (`LogoutButton`, `logoutAction`) — listed
+      under Phase 5, but Phase 2 is the first point where a session can exist, and shipping real
+      sessions with no way to end them is not a state worth committing. It is also no longer a client
+      component: signed out it is a `<Link>`, and only the sign-out control is an island
+- [x] `src/app/auth/layout.tsx` had `const isAuthenticated = false` hardcoded, so its CTA always read
+      "Crea un account". Now reads the real session
+- [x] `CardForm` rewired onto `useAuthForm`, dropping its duplicate RHF wiring and its hand-rolled
+      `isSubmitting` state. Phase 5 still folds it into `<AuthForm mode="login" />`
+- [x] `prisma.config.ts` no longer hardcodes `file:./dev.db`; it reads `DATABASE_URL` first. That
+      hardcoding silently overrode the environment for **every** CLI command, which would have
+      pointed the integration suite's `db push` at `dev.db`
+- [x] Better Auth requires a `name` on its `User`. The register form asks only for an email, so the
+      local part seeds a display name rather than adding a field the design has no room for —
+      **revisit if the dashboard ever shows a real profile**
+
+### Tests written this phase
+
+- [x] Unit — `useAuthForm` (malformed email, short password, mismatched confirmation, values handed
+      to the Server Function, server error mapped onto the password field)
+- [x] Unit — `AuthNavButton` in both states, locking in the un-inverted condition
+- [x] Integration — sign-up stores the credential as a hash on `Account` and leaves `User` without a
+      password column; duplicate email surfaces as an `APIError`, not a Prisma constraint error;
+      wrong password rejected; a real sign-in cookie resolves to the user; **a forged cookie holding
+      a raw user id resolves to `null`**, which is the hole this phase closes
+- [x] `tests/setup/integration.setup.ts` now actually provisions the throwaway DB: absolute
+      `file:` path under `prisma/test.db`, `prisma db push` in `beforeAll`, file (and `-wal`/`-shm`)
+      removed after
+- [x] `vitest.config.mts` aliases `server-only` to a stub — it throws by design in a client module
+      graph, and Vitest is neither graph
 
 ## Phase 3 — Server-first CoinGecko data
 
@@ -270,7 +327,7 @@ unsigned user id, so anyone can set `session=<any user id>` by hand and be that 
 
 ## Phase 5 — Bug sweep and dead code
 
-- [ ] `AuthNavButton` — inverted: an authenticated user is shown "Accedi" → `/auth/login`. Becomes a logout control
+- [x] `AuthNavButton` — inverted: an authenticated user is shown "Accedi" → `/auth/login`. Becomes a logout control *(done in Phase 2: real sessions needed a way to end them)*
 - [ ] `getMarkets` — `currency` was in the query key but the URL hardcoded `vs_currency=usd`, so "eur" returned USD cached under a eur key (fixed in 3a)
 - [ ] `TableCryptoData` — prints `€` on all four money columns while the API returns USD
 - [ ] `MobileMenu` — "Le nostre Crypto" links to `/projects`, which does not exist. Should be `/crypto`
@@ -279,7 +336,7 @@ unsigned user id, so anyone can set `session=<any user id>` by hand and be that 
 - [ ] `About.tsx` / `ChartView.tsx` — `const MotionButton = motion(Button)` inside the component body creates a new component type every render, remounting the button. Hoist to module scope or use the existing `MotionButton.tsx`
 - [ ] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>`
 - [ ] Dead code — `CryptoView.tsx` is imported by nothing; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`
-- [ ] Duplicate email — Better Auth handles this now; surface its error in the form
+- [x] Duplicate email — Better Auth handles this now; surfaced in the form via `toFormError` *(done in Phase 2)*
 - [ ] `Footer.tsx:40` — `new Date().getFullYear()` during render is an unstable value that **blocks prerendering** under `cacheComponents` (found by the Phase 0 trial build). Hoist to module scope
 - [ ] `global-error.tsx:13` — its `<html>` element has no `lang` prop at all (found by the new jsx-a11y rule)
 - [ ] `crypto/[id]/page.tsx:21` — redundant `role="region"` on a `<section>` that already has that implicit role
