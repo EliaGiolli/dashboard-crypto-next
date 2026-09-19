@@ -8,6 +8,12 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  // Keep this line. Prisma validates the schema BEFORE applying the override
+  // in prisma.config.ts, so without it every CLI command fails with
+  // P1012 "Argument url is missing in data source block db".
+  // `prisma migrate dev` strips it whenever the config also declares a
+  // datasource — if a CLI command starts failing that way, put it back.
+  url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------

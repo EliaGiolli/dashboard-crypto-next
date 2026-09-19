@@ -12,8 +12,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
             ? state.favorites.filter((f) => f !== id)
             : [...state.favorites, id],
         })),
-      currency: 'usd',
-      setCurrency: (c) => set({ currency: c }),
     }),
     {
       name: 'preferences-store', // key value inside localStorage

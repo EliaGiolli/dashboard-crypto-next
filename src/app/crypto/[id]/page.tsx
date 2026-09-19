@@ -1,48 +1,71 @@
-//Components
-'use client'
-import MarketCapSingleCrypto from "@/features/crypto/components/charts/MarketCapSingleCrypto";
-import VolumeHistoryChart from "@/features/crypto/components/charts/VolumeHistoryChart";
-import PriceHistoryChart from "@/features/crypto/components/charts/PriceHistoryChart";
+import { Suspense } from "react";
 
-// NOTE: this page is still the pre-refactor version — it is marked
-// 'use client' yet is async and awaits params, which Next 16 does not allow.
-// Phase 3 rewrites it as a server component using PageProps<'/crypto/[id]'>.
-interface CryptoPageProps {
-  params: { id: string }
-}
+import {
+  DEFAULT_DAYS,
+  MarketCapSingleCrypto,
+  PriceHistoryChart,
+  VolumeHistoryChart,
+  getMarketChart,
+  parseCurrency,
+} from "@/features/crypto";
+import { SkeletonComponent } from "@/shared/ui/SkeletonComponent";
+import type { Currency } from "@/shared/utils";
 
-import { easeIn, motion } from 'motion/react';
-
-export default async function CryptoPage({ params }: CryptoPageProps) {
-
-  //In Next15+ params should be awaited before using it
-  const { id } = await params;
-
-  if (!id) {
-    return <p className="text-red-500">Nessuna crypto selezionata</p>;
-  }
+/**
+ * One cached request feeds all three charts. Each chart used to call
+ * `useFetchSingleCrypto(id, days)` for itself, so opening a coin fired three
+ * identical requests from the browser.
+ */
+async function CoinCharts({
+  id,
+  currency,
+}: {
+  id: string;
+  currency: Currency;
+}) {
+  const data = await getMarketChart(id, DEFAULT_DAYS, currency);
+  const shared = { data, coinId: id, currency, days: DEFAULT_DAYS };
 
   return (
-    <section 
+    <div className="flex flex-col gap-6 w-full">
+      <MarketCapSingleCrypto {...shared} />
+      <div className="flex flex-col md:flex-row gap-y-6 md:gap-x-5">
+        <VolumeHistoryChart {...shared} />
+        <PriceHistoryChart {...shared} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A server component. It was marked `'use client'` *and* declared `async`
+ * *and* awaited `params` — a combination Next 16 does not allow — and then
+ * read `params.id` directly alongside the awaited copy.
+ *
+ * `PageProps<'/crypto/[id]'>` comes from `next typegen`, so the route string
+ * is checked against the actual file tree.
+ */
+export default async function CoinPage(props: PageProps<"/crypto/[id]">) {
+  const { id } = await props.params;
+  const { currency } = await props.searchParams;
+
+  return (
+    <section
       className="bg-slate-400 items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20"
-      role="region"
-      aria-labelledby="main-title"
+      aria-labelledby="coin-title"
     >
-      <div className="border border-slate-800/20 w-full p-6 rounded-md shadow-md shadow-slate-500 mb-5 ">
-         <h1 className="text-center text-3xl text-violet-600 capitalize font-bold" id="main-title">Crypto: {params.id}</h1>
-      </div>
-      <div className="flex flex-col gap-6 w-full">
-        <MarketCapSingleCrypto id={params.id} />
-        <motion.div 
-          className="flex flex-col md:flex-row gap-y-6 md:gap-x-5"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ease: easeIn, duration: 2}} 
+      <div className="border border-slate-800/20 w-full p-6 rounded-md shadow-md shadow-slate-500 mb-5">
+        <h1
+          className="text-center text-3xl text-violet-600 capitalize font-bold"
+          id="coin-title"
         >
-          <VolumeHistoryChart id={params.id} />
-          <PriceHistoryChart id={params.id} />
-        </motion.div>
+          Crypto: {id}
+        </h1>
       </div>
+
+      <Suspense fallback={<SkeletonComponent />}>
+        <CoinCharts id={id} currency={parseCurrency(currency)} />
+      </Suspense>
     </section>
   );
 }
