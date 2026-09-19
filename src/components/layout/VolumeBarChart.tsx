@@ -1,6 +1,6 @@
 "use client";
 // External libs
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 // Internal imports
 import { useFetchCrypto } from "../../custom hooks/useFetchCrypto";
 import { SkeletonComponent } from "../shared/SkeletonComponent";

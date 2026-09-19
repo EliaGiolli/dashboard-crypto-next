@@ -9,7 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
+
 } from "recharts";
 
 // Hook personalizzato per fetch storico

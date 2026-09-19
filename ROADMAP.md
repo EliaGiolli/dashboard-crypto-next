@@ -38,7 +38,8 @@ src/
       prisma.ts               # Prisma singleton
       auth.ts                 # Better Auth server instance  (server-only)
       auth-client.ts          # Better Auth React client
-    config/env.ts             # validated env access
+    config/envParser.ts       # server-only, fails fast on bad env
+    schema/parserSchema.ts    # Zod schema for every env var
     hooks/                    # genuinely global hooks only
     types/                    # ambient + global types
     generated/                # Prisma client output (moved from src/generated)
@@ -138,23 +139,37 @@ established convention; flip is contained to `features/auth` if wanted.
 
 - [x] Create branch `refactor/feature-architecture`
 - [x] Create `ROADMAP.md` (this file) and commit it first
-- [ ] `npm install react@latest react-dom@latest @types/react@latest @types/react-dom@latest` (Next 16 targets React 19.2; 19.1 satisfies the peer range but is behind)
-- [ ] Drop redundant flags: `"dev": "next dev"`, `"build": "next build"` (Turbopack is default in 16)
-- [ ] Add ESLint — flat `eslint.config.mjs` with `@next/eslint-plugin-next` **and `eslint-plugin-jsx-a11y`**, plus `"lint": "eslint ."` (`next lint` was removed in 16)
-- [ ] Enable `cacheComponents: true` in `next.config.ts` — makes uncached data / runtime APIs outside `<Suspense>` a build error
-- [ ] `npx next typegen` for `PageProps` / `LayoutProps` helpers
-- [ ] `npx @next/codemod@canary agents-md` — `AGENTS.md` pointing at bundled version-matched docs
+- [x] Restore `CLAUDE.md` (deleted by mistake; `NOTES/` deletion left as intended)
+- [x] React upgraded to **19.3.0** (`react`, `react-dom`)
+- [x] `@types/node` bumped `^20` → `^24` — it was behind the Node 24.14.1 runtime, and Vitest 5 requires `>=22`
+- [x] Drop redundant flags: `"dev": "next dev"`, `"build": "next build"` (Turbopack is default in 16)
+- [x] Scripts added: `lint`, `typecheck`, `test`, `test:watch`, `test:unit`, `test:integration`, `test:e2e`, `test:a11y`, `test:all`
+- [x] ESLint flat config (`eslint.config.mjs`) with `@next/eslint-plugin-next`, `eslint-plugin-jsx-a11y` and `typescript-eslint`
+  - Pinned to **ESLint 9**, not 10: `eslint-plugin-jsx-a11y@6.10.2` peer-caps at 9. Revisit when the plugin ships v10 support
+- [x] `npx next typegen` — `PageProps` / `LayoutProps` helpers available; also regenerated the gitignored `next-env.d.ts` (its absence was the one pre-existing typecheck error)
+- [x] `AGENTS.md` pointing at the bundled version-matched docs in `node_modules/next/dist/docs/`
+  - Written by hand: the `agents-md` codemod is interactive and the agent shell has no stdin
+- [x] `.env` generated (gitignored) + `.env.example` committed
+- [x] `src/core/schema/parserSchema.ts` — Zod schema for every env var
+- [x] `src/core/config/envParser.ts` — `server-only`, fails fast with all problems listed at once
+- [ ] ~~Enable `cacheComponents: true` in Phase 0~~ → **deferred to Phase 3.** Verified by trial build: the flag fails the build today, so enabling it here would leave every intermediate phase red. It goes in once server-first fetching lands and the `<Suspense>` boundaries exist
 
 ### Testing infrastructure
 
-- [ ] Install: `vitest @vitejs/plugin-react jsdom vite-tsconfig-paths @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event @playwright/test @axe-core/playwright`
-- [ ] `npx playwright install`
-- [ ] `vitest.config.mts` with **two projects**:
-  - `unit` (`jsdom`) — `shared/utils`, `features/*/lib` pure functions, hooks, client components, sync server components
-  - `integration` (`node`) — server actions + Prisma against a throwaway SQLite file, seeded and reset per run
-- [ ] `playwright.config.ts` driving a real Next server (only place async Server Components, streaming, `proxy.ts` redirects and full auth flow can be tested)
-- [ ] Scripts: `test`, `test:unit`, `test:integration`, `test:e2e`, `test:a11y`, `test:all`
-- [ ] `.gitignore`: `test.db*`, `/test-results/`, `/playwright-report/`
+- [x] Installed: `vitest` 5, `@vitejs/plugin-react`, `jsdom`, `@testing-library/{react,dom,jest-dom,user-event}`, `@playwright/test`, `@axe-core/playwright`
+- [x] `npx playwright install chromium`
+- [x] `vitest.config.mts` with **two projects** (`unit` / jsdom, `integration` / node)
+  - Dropped `vite-tsconfig-paths` in favour of Vite 8's native `resolve.tsconfigPaths` (one less dependency; unit run went 6.2s → 1.9s)
+- [x] `tests/setup/unit.setup.ts` and `tests/setup/integration.setup.ts` (integration pins `DATABASE_URL` to a throwaway `test.db`, never `dev.db`)
+- [x] `playwright.config.ts` driving a real Next server; a11y specs split by `@a11y` tag
+- [x] `.gitignore`: `test.db*`, `/test-results/`, `/playwright-report/`, `!.env.example`
+- [x] First tests green — 5 unit tests covering `envSchema`
+
+### Baseline established
+
+- `npm run typecheck` — clean
+- `npm run build` — green. **Every route reports `ƒ (Dynamic)`, nothing static**, because the root-layout `Navbar` reads `cookies()`. Empirical confirmation of the Phase 5 finding
+- `npm run lint` — 3 remaining problems, all already tracked below (async client component, redundant `role`, missing `lang` on `global-error`). Trivial unused-import errors cleared in place
 
 ---
 
@@ -203,7 +218,7 @@ unsigned user id, so anyone can set `session=<any user id>` by hand and be that 
 
 - [ ] `features/crypto/lib/coingecko.ts` with `import 'server-only'`, `getMarkets()` and `getMarketChart()` using `'use cache'` + `cacheLife('minutes')` — the server-side replacement for `refetchInterval: 30_000`. Arguments become the cache key automatically, so one entry per `(limit, currency)` replaces the per-component client requests
 - [ ] Env collapse: `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_API_URL_SECOND` → server-side `COINGECKO_API_URL`. The endpoint leaves the client bundle; an API key can be added later without leaking it
-- [ ] `core/config/env.ts` validating env with zod at startup; update `env.d.ts` (currently declares an unused `NEXT_PUBLIC_API_KEY` and omits the `_SECOND` var actually used)
+- [x] `core/config/envParser.ts` + `core/schema/parserSchema.ts` validating env with Zod at startup *(done in Phase 0)*; still to do: update `env.d.ts` (currently declares an unused `NEXT_PUBLIC_API_KEY` and omits the `_SECOND` var actually used)
 
 ### 3b. Pages become server components
 
@@ -250,6 +265,9 @@ unsigned user id, so anyone can set `session=<any user id>` by hand and be that 
 - [ ] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>`
 - [ ] Dead code — `CryptoView.tsx` is imported by nothing; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`
 - [ ] Duplicate email — Better Auth handles this now; surface its error in the form
+- [ ] `Footer.tsx:40` — `new Date().getFullYear()` during render is an unstable value that **blocks prerendering** under `cacheComponents` (found by the Phase 0 trial build). Hoist to module scope
+- [ ] `global-error.tsx:13` — its `<html>` element has no `lang` prop at all (found by the new jsx-a11y rule)
+- [ ] `crypto/[id]/page.tsx:21` — redundant `role="region"` on a `<section>` that already has that implicit role
 - [ ] Drop `pg` — a dependency, but the datasource is SQLite and nothing imports it
 
 ---
@@ -330,8 +348,11 @@ Remote is `EliaGiolli/dashboard-crypto-next`; `gh` 2.69.0 authenticated as **Eli
 
 ## Open items
 
-- [ ] **`.env` does not exist.** Needed before Phase 2 can be verified: `COINGECKO_API_URL`,
-      `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
-- [ ] **`NOTES/prisma-db-setup.md` and `NOTES/react-hook-form-serverAction.md` are deleted in the
-      working tree but not committed.** Restore, commit the deletion, or fold into `CLAUDE.md`? The
-      RHF note's "always validate on server" rule is worth keeping — Phase 2 implements it either way
+- [x] ~~`.env` does not exist~~ — generated in Phase 0 with a locally created 32-byte secret,
+      alongside a committed `.env.example`
+- [ ] **`npm audit`: 6 high / 1 critical**, all transitive under Prisma (`effect`, `deepmerge-ts`)
+      plus `lodash` and `defu`. `npm audit fix --force` would *downgrade* Prisma to 6.12.0, so it was
+      left alone. Worth a look once Phase 2's Prisma work is done
+- [ ] **`NOTES/` deletion still uncommitted.** Left as intended (only `CLAUDE.md` was restored).
+      The RHF note's "always validate on server" rule gets folded into `CLAUDE.md` in Phase 8;
+      Phase 2 implements it regardless
