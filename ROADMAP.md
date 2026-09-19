@@ -274,6 +274,8 @@ unsigned user id, so anyone can set `session=<any user id>` by hand and be that 
 - [ ] `getMarkets` — `currency` was in the query key but the URL hardcoded `vs_currency=usd`, so "eur" returned USD cached under a eur key (fixed in 3a)
 - [ ] `TableCryptoData` — prints `€` on all four money columns while the API returns USD
 - [ ] `MobileMenu` — "Le nostre Crypto" links to `/projects`, which does not exist. Should be `/crypto`
+- [ ] `Footer.tsx:20,23` — **both** nav links point to `/homepage`, which does not exist either. Should be `/` and `/crypto` (found by running the app)
+- [ ] `TableCryptoData` — `next/image` gets `width`/`height` 24 but `className="w-6 h-6"` overrides them, so every page load logs 10 aspect-ratio warnings. Add `style={{ width: 'auto', height: 'auto' }}` or drop the className
 - [ ] `About.tsx` / `ChartView.tsx` — `const MotionButton = motion(Button)` inside the component body creates a new component type every render, remounting the button. Hoist to module scope or use the existing `MotionButton.tsx`
 - [ ] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>`
 - [ ] Dead code — `CryptoView.tsx` is imported by nothing; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`
