@@ -9,8 +9,6 @@ export { AuthForm } from './components/AuthForm'
 export { AuthNavButton } from './components/AuthNavButton'
 export { AuthNav } from './components/AuthNav'
 export { LogoutButton } from './components/LogoutButton'
-// CardForm is a login-only duplicate of AuthForm; Phase 5 folds it in.
-export { CardForm } from './components/CardForm'
 export { loginAction, registerAction, logoutAction } from './actions'
 export { getSession, getCurrentUser, requireUser } from './lib/session'
 export {
