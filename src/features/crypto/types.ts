@@ -17,7 +17,8 @@ export interface CryptoMarket {
   current_price: number
   market_cap: number
   total_volume: number
-  price_change_percentage_24h: number
+  /** `null` for a coin with no 24h history (e.g. a newly listed one). */
+  price_change_percentage_24h: number | null
   image: string
 }
 

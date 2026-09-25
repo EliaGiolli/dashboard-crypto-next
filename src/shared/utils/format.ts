@@ -46,7 +46,14 @@ export function formatCompactCurrency(value: number, currency: Currency): string
   return `${symbol}${value.toFixed(0)}`
 }
 
-/** A signed percentage with a fixed two decimals, e.g. `+1.20%` / `-0.35%`. */
-export function formatPercent(value: number): string {
+/**
+ * A signed percentage with a fixed two decimals, e.g. `+1.20%` / `-0.35%`.
+ *
+ * `null` renders as a dash: CoinGecko returns `null` for a coin with no 24h
+ * history, and calling `.toFixed` on it took the whole `/crypto` table down.
+ */
+export function formatPercent(value: number | null): string {
+  if (value === null) return '—'
+
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 }

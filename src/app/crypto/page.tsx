@@ -1,8 +1,14 @@
 import { Suspense } from "react";
 
 import { TableCryptoData, getMarkets, parseCurrency } from "@/features/crypto";
+import { getWatchlist } from "@/features/watchlist";
 import { SkeletonComponent } from "@/shared/ui/SkeletonComponent";
 
+/**
+ * The markets are cached across users; the watchlist is cached per user and
+ * needs the session. Neither depends on the other, so they are fetched in
+ * parallel rather than one after the other.
+ */
 async function MarketsTable({
   searchParams,
 }: {
@@ -10,9 +16,18 @@ async function MarketsTable({
 }) {
   const { currency } = await searchParams;
   const resolved = parseCurrency(currency);
-  const markets = await getMarkets(10, resolved);
+  const [markets, watchlist] = await Promise.all([
+    getMarkets(10, resolved),
+    getWatchlist(),
+  ]);
 
-  return <TableCryptoData markets={markets} currency={resolved} />;
+  return (
+    <TableCryptoData
+      markets={markets}
+      currency={resolved}
+      watchlist={watchlist}
+    />
+  );
 }
 
 export default function CryptoPage(props: PageProps<"/crypto">) {

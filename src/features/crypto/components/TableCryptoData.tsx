@@ -1,6 +1,6 @@
 import Image from 'next/image'
 
-import { FavoriteButton } from '@/features/watchlist'
+import { FavoriteButton, FavoriteSignInLink } from '@/features/watchlist'
 import { formatCurrency, formatPercent, type Currency } from '@/shared/utils'
 
 import type { CryptoMarket } from '../types'
@@ -8,6 +8,27 @@ import type { CryptoMarket } from '../types'
 interface TableCryptoDataProps {
   markets: CryptoMarket[]
   currency: Currency
+  /**
+   * The signed-in user's favorite coin ids, or `null` when signed out — which
+   * renders a sign-in link in place of each star.
+   */
+  watchlist: string[] | null
+}
+
+/** The 24h change, coloured and arrowed; a plain dash when CoinGecko has none. */
+function PriceChange({ value }: { value: number | null }) {
+  if (value === null) {
+    return <span className="text-slate-400">{formatPercent(value)}</span>
+  }
+
+  const isUp = value >= 0
+
+  return (
+    <span className={isUp ? 'text-green-400' : 'text-red-400'}>
+      <span aria-hidden="true">{isUp ? '▲ ' : '▼ '}</span>
+      {formatPercent(value)}
+    </span>
+  )
 }
 
 /**
@@ -22,7 +43,10 @@ interface TableCryptoDataProps {
 export default function TableCryptoData({
   markets,
   currency,
+  watchlist,
 }: TableCryptoDataProps) {
+  const favorites = new Set(watchlist)
+
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-700 shadow-md">
       <h2 className="text-xl md:text-2xl text-violet-400 p-5 bg-slate-700 text-center py-4">
@@ -84,21 +108,18 @@ export default function TableCryptoData({
                 {formatCurrency(item.total_volume, currency)}
               </td>
               <td className="px-4 py-2 text-right">
-                <span
-                  className={
-                    item.price_change_percentage_24h >= 0
-                      ? 'text-green-400'
-                      : 'text-red-400'
-                  }
-                >
-                  <span aria-hidden="true">
-                    {item.price_change_percentage_24h >= 0 ? '▲ ' : '▼ '}
-                  </span>
-                  {formatPercent(item.price_change_percentage_24h)}
-                </span>
+                <PriceChange value={item.price_change_percentage_24h} />
               </td>
               <td className="px-4 py-2 text-center">
-                <FavoriteButton id={item.id} />
+                {watchlist === null ? (
+                  <FavoriteSignInLink coinName={item.name} />
+                ) : (
+                  <FavoriteButton
+                    coinId={item.id}
+                    coinName={item.name}
+                    isFavorite={favorites.has(item.id)}
+                  />
+                )}
               </td>
             </tr>
           ))}

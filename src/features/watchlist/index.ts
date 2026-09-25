@@ -1,6 +1,19 @@
 // Public surface of the watchlist feature.
 //
-// This is the one cross-feature edge the app has: features/crypto renders the
+// The cross-feature edge the table needs: features/crypto renders the
 // favorite button inside its table, and imports it from here rather than
 // reaching into components/.
-export { default as FavoriteButton } from './components/FavoriteButton'
+//
+// NOTE: this barrel re-exports the `server-only` watchlist query, so it must
+// be imported from Server Components and Server Functions only.
+// `FavoriteButton` imports the Server Function relatively, which is the
+// project convention anyway.
+export { FavoriteButton } from './components/FavoriteButton'
+export { FavoriteSignInLink } from './components/FavoriteSignInLink'
+export { toggleFavorite } from './actions'
+export { getWatchlist } from './lib/queries'
+export type {
+  FavoriteButtonProps,
+  FavoriteSignInLinkProps,
+  ToggleFavoriteResult,
+} from './types'
