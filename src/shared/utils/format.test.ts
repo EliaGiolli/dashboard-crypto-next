@@ -50,4 +50,10 @@ describe('formatPercent', () => {
     expect(formatPercent(3)).toBe('+3.00%')
     expect(formatPercent(-12.3456)).toBe('-12.35%')
   })
+
+  // Regression: CoinGecko returns null for a coin with no 24h history, and
+  // `null.toFixed` crashed the whole /crypto table.
+  it('renders a missing value as a dash instead of throwing', () => {
+    expect(formatPercent(null)).toBe('—')
+  })
 })

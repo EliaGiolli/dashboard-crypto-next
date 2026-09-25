@@ -57,7 +57,7 @@ architecture whose boundaries are enforced by the linter rather than by conventi
 | ✅ | Structure | `core/` · `features/` · `shared/`, boundaries lint-enforced | — |
 | ✅ | Auth | **Better Auth** — signed sessions, `Session`/`Account` tables, `proxy.ts` guard | — |
 | 🚧 | Market data | Client-side via TanStack Query | Server-cached with `use cache` *(Phase 3)* |
-| 🚧 | Favorites | Zustand + `localStorage` | `Watchlist` table + Server Functions *(Phase 4)* |
+| ✅ | Favorites | `Watchlist` table, per-user `use cache` + `updateTag`, optimistic toggle | — |
 | ✅ | Tooling | ESLint flat config, Vitest, Playwright, axe | — |
 | 🚧 | Tests | 17 unit + integration cases | E2E and a11y suites *(Phase 7)* |
 
@@ -75,7 +75,7 @@ architecture whose boundaries are enforced by the linter rather than by conventi
 | ✅ | **Validation** | Zod 4 — forms *and* environment |
 | 📊 | **Charts** | Recharts · Motion |
 | 🧪 | **Testing** | Vitest 5 + Testing Library · Playwright + axe-core |
-| 📦 | **Transitional** | TanStack Query *(removed in Phase 3)* · Zustand *(removed in Phase 4)* |
+| 📦 | **Transitional** | TanStack Query *(removed in Phase 3)* · Zustand *(removed in Phase 4)* · `pg` *(removed in Phase 5)* |
 
 ---
 
@@ -99,7 +99,7 @@ src/
 ├── features/                 # one folder per domain, each with a public index.ts
 │   ├── auth/                 #   components, hooks, lib/session.ts, actions, schemas
 │   ├── crypto/               #   components (incl. charts), hooks, types
-│   ├── watchlist/            #   favorite button, store
+│   ├── watchlist/            #   FavoriteButton, toggleFavorite, per-user cached query
 │   └── home/                 #   landing page sections
 ├── shared/
 │   ├── ui/                   #   shadcn primitives + atomic presentational components
@@ -145,8 +145,11 @@ belongs in `core/`.
 with `ReactQueryProvider` mounted in the `/crypto` layout. Charts and tables call those hooks
 directly. Phase 3 moves this to a server-only, cached data layer.
 
-**Favorites** live in a Zustand store persisted to `localStorage`. The `Watchlist` table exists but
-nothing writes to it yet — Phase 4 connects them.
+**Favorites** live in the `Watchlist` table and require an account. `getWatchlist()` reads the session,
+then a per-user `use cache` entry tagged `watchlist:<userId>`; the `toggleFavorite` Server Function
+writes the row and calls `updateTag` on that tag, so the change is visible on the next render.
+`FavoriteButton` flips optimistically with `useOptimistic` and reverts on failure. Signed-out visitors
+see a sign-in link in place of the star.
 
 ---
 
@@ -292,8 +295,6 @@ Tracked in [ROADMAP.md](./ROADMAP.md) with the phase that fixes each.
 
 - `crypto/[id]/page.tsx` is marked `'use client'` yet is `async` and awaits `params`, which Next 16
   does not allow.
-- The footer's two nav links point to `/homepage`, and the mobile menu's to `/projects`. Neither
-  route exists.
 - The table renders `€` on all money columns while the API returns USD.
 
 ### 🐢 Correctness / performance

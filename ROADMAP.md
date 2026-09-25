@@ -407,12 +407,59 @@ them would have meant knowingly shipping a red build or re-breaking code being r
 
 ## Phase 4 — Watchlist feature
 
-- [ ] `features/watchlist/lib/queries.ts` (`server-only`) — `getWatchlist(userId)`, `React.cache`-wrapped. Do **not** put `use cache` on user data: it is request-scoped; `React.cache` + `<Suspense>` is the correct pairing under `cacheComponents`
-- [ ] `features/watchlist/actions.ts` — `toggleFavorite(coinId)`: auth check, delete-or-create against the existing `@@unique([userId, coinId])`, then `updateTag` on a per-user tag for read-your-writes
-- [ ] Note: `revalidateTag` now **requires** a second `cacheLife` argument in 16 — the one-arg form is a TypeScript error
-- [ ] `FavoriteButton` client island — props `{ coinId, isFavorite }`, `useOptimistic` + `useTransition`. Logged out → parent renders a `Link` to `/auth/login`
-- [ ] Delete `favouriteStore.ts` and `storeTypes.ts`
-- [ ] No migration needed: `Watchlist` and its unique constraint already exist
+- [x] `features/watchlist/lib/queries.ts` (`server-only`) — `getWatchlist()` returns the signed-in
+      user's coin ids, or `null` when signed out (the UI renders a sign-in link for `null`, unstarred
+      buttons for `[]`)
+  - **Plan changed: `use cache` keyed by user id, not `React.cache`.** The plan contradicted
+    itself: `updateTag` only expires `'use cache'` entries carrying that tag, so a `React.cache`
+    read would have given it nothing to invalidate. Next 16's bundled guide *Authentication with
+    Cache Components* (Step 4) gives this exact pattern: read the session **outside** the cache,
+    pass only the user id into an unexported `'use cache'` function tagged `watchlist:<userId>`.
+    The id is part of the cache key, so entries never cross users, and with no id parameter
+    exported a caller cannot ask for somebody else's list
+- [x] `features/watchlist/actions.ts` — `toggleFavorite(coinId)`: Zod-validates the id (reachable by
+      direct POST), checks the session, `deleteMany` then `upsert` against
+      `@@unique([userId, coinId])`, then `updateTag(watchlistTag(userId))` for read-your-writes.
+      Returns `{ ok, isFavorite } | { ok: false, error }` instead of redirecting, so the optimistic
+      button can show why it reverted
+  - `deleteMany` + count rather than find-then-delete (one round trip, no read/write window);
+    `upsert` rather than `create` so two racing clicks cannot surface the unique constraint.
+    Covered by an integration test that fires both at once
+- [x] Note: `revalidateTag` now **requires** a second `cacheLife` argument in 16 — not used here;
+      `updateTag` is the Server-Action-only, read-your-writes variant
+- [x] `FavoriteButton` client island — props `{ coinId, coinName, isFavorite }`, `useOptimistic` +
+      `useTransition`, error in a `role="alert"`. `coinName` is only for a screen-reader suffix:
+      every row's visible text was identical. Logged out → `TableCryptoData` renders
+      `FavoriteSignInLink`, a server `<Link>` to `/auth/login`
+- [x] `/crypto` fetches markets and watchlist in parallel inside the existing `<Suspense>`
+- [x] `/dashboard` lists the watchlist (it said "coming in the next phase"), with links to each coin
+      and an unstar control; empty state links to `/crypto`
+- [x] Deleted `features/watchlist/store.ts` (the old `favouriteStore.ts`) and dropped `zustand` —
+      the Phase 3 deferral. `watchlist/types.ts` rewritten for the new props and result
+- [x] No migration needed: `Watchlist` and its unique constraint already exist
+
+### Verified in the browser (production build, throwaway DB)
+
+- [x] Signed out, `/crypto` shows "Accedi per salvare" links; register → lands on `/dashboard`
+- [x] Star Bitcoin → reload → still starred; `/dashboard` lists it; unstarring there drops the row
+      in the same response (`updateTag` re-render). Console clean, zero browser requests to CoinGecko
+
+### Found by opening the app
+
+- [x] **`/crypto` crashed** with `Cannot read properties of null (reading 'toFixed')`. CoinGecko
+      returns `price_change_percentage_24h: null` for a coin with no 24h history (one was in the
+      top 10 on the day). `CryptoMarket` now types it `number | null`, `formatPercent(null)` renders
+      `—`, and the table's change cell is a small `PriceChange` component. Regression test added.
+      Again: the build was green
+
+### Tests written this phase
+
+- [x] Unit — `FavoriteButton`: accessible name includes the coin, flips before the Server Function
+      answers, reverts with an alert on failure, follows the prop once the server catches up
+- [x] Unit — `coinIdSchema` accepts/rejects, `watchlistTag` is per user
+- [x] Integration — `toggleFavorite` creates then deletes, calls `updateTag` with only that user's
+      tag, survives two concurrent toggles, refuses when signed out, rejects malformed ids before
+      touching the session or the DB
 
 ---
 
@@ -421,17 +468,17 @@ them would have meant knowingly shipping a red build or re-breaking code being r
 - [x] `AuthNavButton` — inverted: an authenticated user is shown "Accedi" → `/auth/login`. Becomes a logout control *(done in Phase 2: real sessions needed a way to end them)*
 - [x] `getMarkets` — `currency` was in the query key but the URL hardcoded `vs_currency=usd`, so "eur" returned USD cached under a eur key *(done in Phase 3)*
 - [x] `TableCryptoData` — prints `€` on all four money columns while the API returns USD *(done in Phase 3)*
-- [ ] `MobileMenu` — "Le nostre Crypto" links to `/projects`, which does not exist. Should be `/crypto`
+- [x] `MobileMenu` — "Le nostre Crypto" links to `/projects`, which does not exist. Should be `/crypto`
 - [x] `Footer.tsx:20,23` — **both** nav links point to `/homepage`, which does not exist either. Should be `/` and `/crypto` (found by running the app) *(done in Phase 3)*
 - [x] `TableCryptoData` — `next/image` gets `width`/`height` 24 but `className="w-6 h-6"` overrides them, so every page load logs 10 aspect-ratio warnings. Dropped the className *(done in Phase 3)*
 - [x] `About.tsx` / `ChartView.tsx` — `const MotionButton = motion(Button)` inside the component body creates a new component type every render, remounting the button. Removed entirely; `MotionButton.tsx` hoisted to module scope and moved to `motion.create()` *(done in Phase 3)*
 - [x] `src/app/layout.tsx` — `Navbar` reads the session in the root layout, so under `cacheComponents` no route can prerender. Static links stay outside; the auth-dependent slice goes in `<Suspense>` *(done in Phase 3)*
-- [ ] Dead code — `CryptoView.tsx` is imported by nothing; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`
+- [x] Dead code — `CryptoView.tsx` is imported by nothing *(deleted in Phase 1)*; `CardForm.tsx` is a second login-only copy of `AuthForm.tsx` reachable via `CallToAction`, fold into `<AuthForm mode="login" />`. Folded and deleted; that also left `shared/ui/MotionButton.tsx` with no importer, so it went too (`motion` stays, `FadeInSection` uses it)
 - [x] Duplicate email — Better Auth handles this now; surfaced in the form via `toFormError` *(done in Phase 2)*
 - [x] `Footer.tsx:40` — `new Date().getFullYear()` during render is an unstable value that **blocks prerendering** under `cacheComponents` (found by the Phase 0 trial build). Hoist to module scope *(done in Phase 3)*
 - [x] `global-error.tsx:13` — its `<html>` element has no `lang` prop at all (found by the new jsx-a11y rule) *(already fixed in the working tree; rides along with Phase 3)*
 - [x] `crypto/[id]/page.tsx:21` — redundant `role="region"` on a `<section>` that already has that implicit role *(done in Phase 3)*
-- [ ] Drop `pg` — a dependency, but the datasource is SQLite and nothing imports it
+- [x] Drop `pg` — a dependency, but the datasource is SQLite and nothing imports it. Re-add it with the Postgres adapter when the production datasource switches
 
 ---
 
